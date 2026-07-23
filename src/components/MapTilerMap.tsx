@@ -8,10 +8,10 @@ const LOCATE_ZOOM = 15
 
 function getUserPosition(): Promise<GeolocationPosition | null> {
   if (!('geolocation' in navigator)) return Promise.resolve(null)
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     navigator.geolocation.getCurrentPosition(
-      (position) => resolve(position),
-      (error) => {
+      position => resolve(position),
+      error => {
         console.warn('Geolocation failed:', error.message)
         resolve(null)
       },
@@ -33,7 +33,7 @@ export default function MapTilerMap() {
     // Resolve the user's location first, then open the map already centered
     // there so the initial view IS the current location (no fly-in). Falls
     // back to MapTiler defaults if location is denied or unavailable.
-    void getUserPosition().then((position) => {
+    void getUserPosition().then(position => {
       if (cancelled) return
 
       const map = new Map({
@@ -43,10 +43,7 @@ export default function MapTilerMap() {
         geolocateControl: false,
         ...(position
           ? {
-              center: [
-                position.coords.longitude,
-                position.coords.latitude,
-              ] as [number, number],
+              center: [position.coords.longitude, position.coords.latitude] as [number, number],
               zoom: LOCATE_ZOOM,
             }
           : {}),
@@ -68,9 +65,7 @@ export default function MapTilerMap() {
         showAccuracyCircle: true,
       })
       map.addControl(geolocate)
-      geolocate.on('error', (e) =>
-        console.warn('Geolocation failed:', e?.message ?? e),
-      )
+      geolocate.on('error', e => console.warn('Geolocation failed:', e?.message ?? e))
       if (position) map.on('load', () => geolocate.trigger())
     })
 

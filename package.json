@@ -10,7 +10,9 @@
     "generate-routes": "tsr generate",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint"
+    "lint": "eslint",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check"
   },
   "dependencies": {
     "@clerk/localizations": "^4.13.6",
@@ -34,6 +36,7 @@
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^10.7.0",
+    "oxfmt": "^0.60.0",
     "typescript": "^6.0.2",
     "vite": "^8.0.0"
   },

@@ -1,8 +1,4 @@
-import {
-  Show,
-  SignInButton,
-  SignUpButton,
-} from '@clerk/tanstack-react-start'
+import { Show, SignInButton, SignUpButton } from '@clerk/tanstack-react-start'
 
 import { BRAND_NAME, BrandLogo } from '#/brand'
 
@@ -13,11 +9,8 @@ export function AuthOverlay() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="flex w-full flex-col items-center gap-6 bg-white/95 px-6 py-8 text-center shadow-2xl ring-1 ring-black/5">
             <BrandLogo className="h-16 w-16" />
-            <h1 className="text-3xl font-semibold tracking-wide text-gray-900">
-              {BRAND_NAME}
-            </h1>
+            <h1 className="text-3xl font-semibold tracking-wide text-gray-900">{BRAND_NAME}</h1>
             <div className="flex w-full flex-col gap-3">
-
               <SignUpButton mode="modal">
                 <button
                   type="button"
