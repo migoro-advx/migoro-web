@@ -13,6 +13,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@clerk/localizations": "^4.13.6",
+    "@clerk/tanstack-react-start": "^1.4.21",
     "@maptiler/sdk": "^4.0.2",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "latest",

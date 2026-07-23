@@ -1,3 +1,5 @@
+import { ClerkProvider } from '@clerk/tanstack-react-start'
+import { zhCN } from '@clerk/localizations'
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
@@ -35,7 +37,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        {children}
+        <ClerkProvider localization={zhCN}>{children}</ClerkProvider>
         <TanStackDevtools
           config={{
             position: 'bottom-right',
