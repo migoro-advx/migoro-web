@@ -1,14 +1,18 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { lazy, Suspense } from 'react'
+import { ClientOnly, createFileRoute } from '@tanstack/react-router'
+
+const MapTilerMap = lazy(() => import('#/components/MapTilerMap'))
 
 export const Route = createFileRoute('/')({ component: Home })
 
 function Home() {
   return (
-    <div className="p-8">
-      <h1 className="text-4xl font-bold">Welcome to TanStack Start</h1>
-      <p className="mt-4 text-lg">
-        Edit <code>src/routes/index.tsx</code> to get started.
-      </p>
+    <div className="fixed inset-0">
+      <ClientOnly fallback={null}>
+        <Suspense fallback={null}>
+          <MapTilerMap />
+        </Suspense>
+      </ClientOnly>
     </div>
   )
 }

@@ -13,6 +13,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@maptiler/sdk": "^4.0.2",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "latest",
     "@tanstack/react-router": "latest",
