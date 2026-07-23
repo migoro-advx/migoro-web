@@ -28,6 +28,7 @@ Important notes for anyone (human or agent) working in this repository.
 - **Explicit style required:** always pass a `MapStyle` value (e.g. `MapStyle.STREETS`). SDK v4's implicit default is broken and throws during projection migration.
 - **Container sizing:** size the map container with `h-full w-full` (percentage), not `absolute inset-0`. The SDK's CSS forces `.maplibregl-map { position: relative }`, which defeats `inset-0` and collapses the height to 0.
 - **API key:** provided via the `VITE_MAPTILER_API_KEY` env var (`.env`, gitignored). Keys are public by nature — restrict them to your domain(s) in the MapTiler Cloud dashboard.
+- **Startup geolocation:** resolve the user's position via the browser Geolocation API *before* constructing the map, then open it already centered on that location (`zoom` 15) — the initial view IS the user's location, intentionally with no fly-in/animation. Fall back to MapTiler defaults when permission is denied or unavailable. A `GeolocateControl` (with `geolocateControl: false` on the map to avoid a duplicate button) provides the accuracy dot and on-demand re-centering; it is configured with `trackUserLocation: false` and `fitBoundsOptions.animate: false` so it snaps rather than flies and never locks the camera. The map stays fully interactive (no bounds). Requires a secure context (localhost in dev, HTTPS in prod).
 
 ## Commands
 
