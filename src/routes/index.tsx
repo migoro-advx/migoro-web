@@ -5,6 +5,7 @@ import { useAtomValue, useSetAtom } from 'jotai'
 import { AuthOverlay } from '#/components/AuthOverlay'
 import BottomNav, { NAV_OFFSET } from '#/components/BottomNav'
 import TimeDial from '#/components/TimeDial'
+import { SproutMark } from '#/brand/illustrations'
 import { placeNameAtom, selectedDayAtom } from '#/features/sightings/state'
 import { useSightings } from '#/features/sightings/useSightings'
 import { queryOpenAtom, selectedSpeciesAtom } from '#/features/species/state'
@@ -16,6 +17,33 @@ const SightingsMarkers = lazy(() => import('#/features/sightings/SightingsMarker
 export const Route = createFileRoute('/')({ component: Home })
 
 const MS_PER_DAY = 86_400_000
+
+/** Height of the visible dial dome (matches TimeDial's default reveal). */
+const DIAL_REVEAL = '240px'
+
+function MagnifierIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden className="text-muted">
+      <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
+      <path d="m16 16 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function PinIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden className="text-accent">
+      <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="12" r="1.4" fill="currentColor" />
+      <path
+        d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
 
 /** "今天" / "昨天" / "N天前" + "M月D日" for the dial's center label. */
 function dayLabel(day: Date): string {
@@ -60,51 +88,52 @@ function Home() {
       <div className="fixed inset-x-0 top-0 z-40 px-5 pt-[calc(env(safe-area-inset-top)+0.75rem)]">
         <div className="mx-auto w-full max-w-md">
           <div className="flex items-center gap-2 rounded-full bg-white px-4 py-3 shadow-lg ring-1 ring-black/5">
-            <span aria-hidden className="text-neutral-400">
-              ⌕
-            </span>
+            <MagnifierIcon />
             <button
               type="button"
               onClick={() => setQueryOpen(true)}
-              className="flex-1 text-left text-sm text-neutral-800"
+              className="flex-1 text-left text-sm text-ink"
             >
               {selectedSpecies ? (
                 selectedSpecies.commonName
               ) : (
-                <span className="text-neutral-400">查哪一种花？</span>
+                <span className="text-muted">查哪一种花？</span>
               )}
             </button>
             {selectedSpecies && (
               <button
                 type="button"
                 onClick={() => setSpecies(null)}
-                className="text-sm text-orange-500"
+                className="text-sm font-medium text-accent"
               >
                 清除
               </button>
             )}
           </div>
           {placeName && (
-            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs text-neutral-600 shadow-md ring-1 ring-black/5">
-              <span aria-hidden className="text-neutral-400">
-                ⌖
-              </span>
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs text-ink shadow-md ring-1 ring-black/5">
+              <PinIcon />
               {placeName}
             </div>
           )}
         </div>
       </div>
 
-      {/* Empty state — no sightings for this species on this day. */}
+      {/* Empty state — no sightings for this species on this day. Anchored just
+          above the dial dome (peach card with a sprout), per the mockup. */}
       {showEmptyState && selectedSpecies && (
-        <div className="pointer-events-none fixed inset-x-0 top-1/2 z-30 -translate-y-1/2 px-6">
-          <div className="mx-auto w-full max-w-md rounded-3xl bg-white px-6 py-5 shadow-xl ring-1 ring-black/5">
-            <p className="text-base font-semibold text-neutral-900">
-              这一天暂时没有「{selectedSpecies.commonName}」实况。
-            </p>
-            <p className="mt-1.5 text-sm text-neutral-400">
-              换一天看看，或分享你在现场看到的样子。
-            </p>
+        <div
+          className="pointer-events-none fixed inset-x-0 z-30 px-6"
+          style={{ bottom: `calc(${NAV_OFFSET} + ${DIAL_REVEAL} + 1.5rem)` }}
+        >
+          <div className="mx-auto flex w-full max-w-md items-center gap-3 rounded-3xl bg-peach px-6 py-5 shadow-[0_10px_30px_rgba(214,138,95,.2)]">
+            <div className="min-w-0 flex-1">
+              <p className="text-base font-semibold text-ink">
+                这一天暂时没有「{selectedSpecies.commonName}」实况。
+              </p>
+              <p className="mt-1.5 text-sm text-muted">换一天看看，或分享你在现场看到的样子。</p>
+            </div>
+            <SproutMark className="h-12 w-12 shrink-0" />
           </div>
         </div>
       )}

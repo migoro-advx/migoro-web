@@ -3,6 +3,7 @@
 // `Marker`. Imported only from the client-only marker layer.
 import type { Map } from '@maptiler/sdk'
 
+import { COLORS } from '#/brand'
 import type { BloomStage, LngLat, Sighting } from '#/lib/api'
 
 /**
@@ -17,7 +18,7 @@ export const BLOOM_STAGE_COLOR: Record<BloomStage, string> = {
   凋落: '#b7a894',
 }
 
-const CLUSTER_COLOR = '#7c9a6d'
+const CLUSTER_COLOR = COLORS.sage
 
 /** Points within this pixel distance (at the current zoom) merge into one cluster. */
 const CLUSTER_PIXEL_RADIUS = 44

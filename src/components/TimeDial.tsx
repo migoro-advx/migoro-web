@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 
+import { COLORS } from '#/brand'
+
 /**
  * Bottom-anchored half-dial (dome) time selector for 見頃.
  *
@@ -34,11 +36,12 @@ const SETTLE_DIST = 0.15 // deg — settle threshold
 const MAX_DT = 0.032 // clamp per-frame step to avoid jumps after dropped frames
 const WHEEL_VELOCITY_K = 0.12 // wheel delta -> injected angular velocity
 
-// Dial palette (tuned to the peach mockup).
-const DIAL_PEACH = '#f6ccae' // outer arc band (light orange)
+// Dial palette (shared tokens; see src/brand). White dome body, peach is only a
+// thin rim ring, salmon radial ticks, orange apex pointer.
+const DIAL_PEACH = COLORS.peachRim // outer arc band (light orange)
 const DIAL_CORE = '#ffffff' // white dome body (peach is only a rim ring)
-const DIAL_TICK = '#dd8a5f' // salmon radial ticks
-const DIAL_ACCENT = '#e8865a' // apex pointer (orange)
+const DIAL_TICK = COLORS.peachTick // salmon radial ticks
+const DIAL_ACCENT = COLORS.accent // apex pointer (orange)
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 

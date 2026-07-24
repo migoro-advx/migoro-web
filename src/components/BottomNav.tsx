@@ -1,6 +1,8 @@
-// Bottom navigation bar shown on the map home page: 地图 / 拍摄 / 我的.
-// 地图 is the active tab, 拍摄 opens the photo-share journey (/share), and 我的
-// is an inert placeholder until that section exists.
+// Bottom navigation bar shown on the map home page and the species overlay.
+// Behavior is unchanged from the labeled version: left = 地图 (current page,
+// no-op), center = 拍摄 (opens /share), right = 我的 (inert placeholder). Only
+// the appearance follows the mockup — two sage circular buttons flanking a
+// raised orange floating action button.
 import { Link } from '@tanstack/react-router'
 
 /**
@@ -12,30 +14,18 @@ const NAV_CONTENT_HEIGHT = 60
 /** CSS length from the viewport bottom to the top of the nav content row. */
 export const NAV_OFFSET = `calc(${NAV_CONTENT_HEIGHT}px + env(safe-area-inset-bottom))`
 
-function MapIcon() {
+/** Concentric crosshair — the 地图/定位 affordance. */
+function LocateIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="12" r="6" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="12" r="1.6" fill="currentColor" />
       <path
-        d="M12 21s7-5.686 7-11a7 7 0 1 0-14 0c0 5.314 7 11 7 11Z"
+        d="M12 3v3M12 18v3M3 12h3M18 12h3"
         stroke="currentColor"
         strokeWidth="1.8"
-        strokeLinejoin="round"
+        strokeLinecap="round"
       />
-      <circle cx="12" cy="10" r="2.4" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  )
-}
-
-function CameraIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M4 8.5A1.5 1.5 0 0 1 5.5 7h1.7l1-1.6a1 1 0 0 1 .84-.46h4.92a1 1 0 0 1 .84.46l1 1.6h1.7A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5v-9Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <circle cx="12" cy="12.5" r="3" stroke="currentColor" strokeWidth="1.8" />
     </svg>
   )
 }
@@ -54,31 +44,43 @@ function ProfileIcon() {
   )
 }
 
+function PlusIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export default function BottomNav() {
   return (
-    <nav
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-black/5 bg-white pb-[env(safe-area-inset-bottom)]"
-      aria-label="主导航"
-    >
-      <div className="mx-auto flex h-[60px] max-w-md items-stretch justify-around px-6">
-        <span className="flex flex-1 flex-col items-center justify-center gap-1 text-neutral-900">
-          <MapIcon />
-          <span className="text-[11px] font-medium">地图</span>
+    <nav className="fixed inset-x-0 bottom-0 z-50 bg-white pb-6" aria-label="主导航">
+      <div className="relative mx-auto flex h-[60px] max-w-md items-center justify-between px-10">
+        {/* 地图 — current page, no navigation. */}
+        <span
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-sage text-white"
+          aria-label="地图"
+        >
+          <LocateIcon />
         </span>
+
+        {/* 拍摄 — raised orange FAB opening the photo-share journey. */}
         <Link
           to="/share"
-          className="flex flex-1 flex-col items-center justify-center gap-1 text-neutral-400"
+          aria-label="拍摄"
+          className="absolute left-1/2 -top-3 flex h-16 w-16 -translate-x-1/2 items-center justify-center rounded-full bg-accent-strong text-white"
         >
-          <CameraIcon />
-          <span className="text-[11px]">拍摄</span>
+          <PlusIcon />
         </Link>
+
+        {/* 我的 — inert placeholder until that section exists. */}
         <button
           type="button"
           disabled
-          className="flex flex-1 flex-col items-center justify-center gap-1 text-neutral-400"
+          aria-label="我的"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-sage text-white"
         >
           <ProfileIcon />
-          <span className="text-[11px]">我的</span>
         </button>
       </div>
     </nav>
