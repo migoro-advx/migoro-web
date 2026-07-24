@@ -19,7 +19,6 @@ export interface ShareForm {
   /** Finer-grained area within the place, e.g. "湖畔入口 · 东侧花带". */
   areaName: string
   coords: LngLat | null
-  description: string
 }
 
 export type SubmitState =
@@ -33,7 +32,6 @@ export const EMPTY_FORM: ShareForm = {
   locationName: '',
   areaName: '',
   coords: null,
-  description: '',
 }
 
 export const stepAtom = atom<ShareStep>('capture')

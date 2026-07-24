@@ -1,7 +1,7 @@
 // Step 4: publish editing ("发布实况"). Pre-fills the confirmed species, bloom
 // stage, and the location captured in the previous step, plus the read-only
-// on-site capture time. The user completes the bloom stage / description and,
-// after confirming time & location, publishes via the API shell — which routes
+// on-site capture time. The user completes the bloom stage and, after
+// confirming time & location, publishes via the API shell — which routes
 // to the success step. Coordinates stay in MapTiler LngLat end to end.
 //
 // Layout mirrors the "发布实况" design. A single image is allowed per post
@@ -54,7 +54,6 @@ export default function DetailStep() {
         speciesId: selectedSpecies?.id ?? null,
         bloomStage: form.bloomStage,
         location: { name: form.locationName, coords: form.coords },
-        description: form.description,
       })
       setSubmitState({ status: 'success', id: result.id })
       setStep('success')
@@ -154,18 +153,6 @@ export default function DetailStep() {
           </span>
           <span className="mt-1 block text-xs text-neutral-400">现场拍摄 · 可信字段，只读</span>
         </div>
-
-        {/* 正文 */}
-        <label className="block rounded-2xl bg-neutral-100 px-4 py-3">
-          <span className="block text-xs text-neutral-400">正文（选填）</span>
-          <textarea
-            value={form.description}
-            onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
-            rows={3}
-            placeholder="补充现场情况或观赏建议..."
-            className="mt-0.5 w-full resize-none bg-transparent text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none"
-          />
-        </label>
 
         {/* Confirmation gate. */}
         <label className="flex items-center gap-2 text-sm text-neutral-700">

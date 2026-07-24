@@ -73,10 +73,6 @@ function PostDetail() {
               {TIME_SOURCE_LABEL[post.timeSource]}
             </p>
 
-            {post.description && (
-              <p className="mt-4 text-base leading-relaxed text-ink">{post.description}</p>
-            )}
-
             {/* Location card — taps back to the place waterfall. */}
             <button
               type="button"

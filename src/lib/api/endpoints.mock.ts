@@ -138,16 +138,6 @@ const PLACE_DEFS: PlaceDef[] = [
   { id: 'place-gushan-garden', parkName: '孤山植物园', areaName: '银杏道' },
 ]
 
-/** Short captions rotated through posts (empty entries leave 正文 blank). */
-const CAPTION_POOL = [
-  '整片开得正好，光线柔和。',
-  '今早路过拍的，人不多。',
-  '花色偏淡，含苞的还挺多。',
-  '风一吹落了一地，别有味道。',
-  '',
-  '',
-]
-
 /** Deterministic coordinate for the nth place, spread ~0.4–1.3km around the anchor. */
 function placeCoords(anchor: [number, number], index: number): [number, number] {
   const rand = mulberry32(hashSeed(`place-offset:${index}`))
@@ -226,7 +216,6 @@ function buildPostsForPlaceDay(placeId: string, date: string): Post[] {
       const published = new Date(captured.getTime() + (5 + Math.floor(rand() * 120)) * 60_000)
       const stage: BloomStage = BLOOM_STAGES[Math.floor(rand() * BLOOM_STAGES.length)]
       const timeSource: TimeSource = rand() < 0.75 ? 'onsite' : 'album'
-      const caption = CAPTION_POOL[Math.floor(rand() * CAPTION_POOL.length)]
       posts.push({
         id: `${placeId}__${date}__${sp.id}__${i}`,
         placeId,
@@ -235,7 +224,6 @@ function buildPostsForPlaceDay(placeId: string, date: string): Post[] {
         capturedAt: captured.toISOString(),
         publishedAt: published.toISOString(),
         timeSource,
-        ...(caption ? { description: caption } : {}),
       })
     }
   }

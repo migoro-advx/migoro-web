@@ -139,7 +139,7 @@ function toPost(vo: PostVO): Post {
     bloomStage: stageFromVO(vo),
     capturedAt: vo.capturedAt,
     publishedAt: vo.publishedAt ?? vo.capturedAt,
-    // The backend has no time-source or description field; default to on-site.
+    // The backend has no time-source field; default to on-site.
     timeSource: 'onsite',
   }
 }
@@ -294,8 +294,8 @@ export const realApi: Api = {
       locationName: payload.location.name,
     })
 
-    // Multipart upload of the captured photo (held as a data URL). The backend
-    // has no description field, so `payload.description` is intentionally dropped.
+    // Multipart upload of the captured photo (held as a data URL). Posts have
+    // no body field, so nothing else is sent in the request body.
     const blob = await (await fetch(payload.image)).blob()
     const form = new FormData()
     form.append('file', blob, 'capture.jpg')

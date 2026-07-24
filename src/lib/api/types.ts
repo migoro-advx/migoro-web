@@ -60,7 +60,6 @@ export interface CreatePostPayload {
     name: string
     coords: LngLat | null
   }
-  description: string
 }
 
 export interface CreatePostResult {
@@ -119,7 +118,6 @@ export interface Post {
   /** ISO 8601 publish time. */
   publishedAt: string
   timeSource: TimeSource
-  description?: string
 }
 
 /**
