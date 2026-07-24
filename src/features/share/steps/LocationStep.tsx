@@ -121,7 +121,7 @@ export default function LocationStep() {
         <button
           type="button"
           onClick={() => setStep('detail')}
-          className="w-full rounded-full bg-ink px-8 py-3 text-sm text-white transition-transform duration-150 active:scale-95"
+          className="w-full rounded-full bg-ink px-8 py-3 text-sm text-white t-press"
         >
           确认位置
         </button>

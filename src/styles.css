@@ -54,8 +54,10 @@ body {
   /* Easings (skip --ease-in-out — Tailwind already defines it) */
   --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-bounce: cubic-bezier(0.34, 1.36, 0.64, 1);
+  --ease-bounce-strong: cubic-bezier(0.34, 3.85, 0.64, 1);
 
   /* Distances / scales / blurs */
+  --distance-micro: 4px;
   --distance-small: 6px;
   --distance-base: 8px;
   --distance-medium: 12px;
@@ -93,6 +95,17 @@ body {
   --check-path-delay: var(--duration-micro);
   --check-ease-out: var(--ease-smooth-out);
   --check-ease-bob: var(--ease-bounce);
+
+  /* Springy press feedback (press fast, release with a bounce). */
+  --press-scale: 0.92;
+
+  /* Draw-on checkbox (25-checkbox-check). 14 = check path length + 1. */
+  --checkbox-dash: 14;
+
+  /* Success-page petal burst. Fires after the check finishes drawing:
+     check stagger slot + path delay + path draw duration. */
+  --petal-dur: calc(var(--duration-very-slow) + var(--duration-fast));
+  --petal-delay: calc(var(--duration-stagger) + var(--check-path-delay) + var(--check-path-dur));
 }
 
 /* --- Entrances (enter-only; animate on mount, none on unmount) --------- */
@@ -354,6 +367,132 @@ body {
   }
 }
 
+/* --- Playful layer ------------------------------------------------------ */
+/* Springy tap: press down fast and direct, release with a strong bounce.
+   Uses the individual `scale` property so it composes with Tailwind v4's
+   translate utilities (e.g. the BottomNav FAB's -translate-x-1/2).
+   Depth is tunable per element via --press-scale (shutter presses deeper). */
+.t-press {
+  transition: scale var(--duration-medium) var(--ease-bounce-strong);
+}
+.t-press:active {
+  scale: var(--press-scale);
+  transition: scale var(--duration-quick) var(--ease-smooth-out);
+}
+
+/* Text swap-in: replays via React key remount when the string changes
+   (TimeDial day label). Blurred micro-rise, quick so fast dial drags
+   never feel laggy. */
+@keyframes t-swap-in {
+  from {
+    opacity: 0;
+    translate: 0 var(--distance-micro);
+    filter: blur(var(--blur-small));
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    filter: blur(0);
+  }
+}
+.t-swap-in {
+  display: inline-block;
+  animation: t-swap-in var(--duration-quick) var(--ease-smooth-out) backwards;
+}
+
+/* Selection pop: a just-selected pill/chip bounces from 0.85 to rest.
+   Replays via React key remount on the selected element. */
+@keyframes t-select-pop {
+  from {
+    scale: 0.85;
+  }
+  to {
+    scale: 1;
+  }
+}
+.t-select-pop {
+  animation: t-select-pop var(--duration-fast) var(--ease-bounce);
+}
+
+/* Draw-on checkbox (25-checkbox-check): box fills, then the white check
+   strokes itself in. Visual layer only — pair with a `sr-only` real input
+   and mirror its state via data-checked. Unchecking resets instantly. */
+.t-checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  border-radius: 0.3rem;
+  border: 1.5px solid var(--color-ink);
+  transition: background-color var(--duration-quick) var(--ease-smooth-out);
+}
+.t-checkbox svg {
+  display: block;
+  overflow: visible;
+}
+.t-checkbox svg path {
+  stroke-dasharray: var(--checkbox-dash);
+  stroke-dashoffset: var(--checkbox-dash);
+}
+.t-checkbox[data-checked] {
+  background: var(--color-ink);
+}
+/* The real input is sr-only — surface keyboard focus on the visual box. */
+input:focus-visible + .t-checkbox {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}
+.t-checkbox[data-checked] svg path {
+  animation: t-checkbox-draw var(--duration-fast) var(--ease-smooth-out) var(--duration-micro)
+    forwards;
+}
+@keyframes t-checkbox-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Petal burst: pure-CSS petal-shaped divs (no SVG illustrations involved)
+   scattering out from the success check once its stroke finishes drawing.
+   Per-petal trajectory comes from inline --petal-x / --petal-y / --petal-angle
+   / --petal-color custom properties. Plays once on mount. */
+.t-petals {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.t-petals span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 6px;
+  margin: -3px 0 0 -5px;
+  border-radius: 80% 20% 80% 20%;
+  background: var(--petal-color, var(--color-accent));
+  opacity: 0;
+  animation: t-petal-burst var(--petal-dur) var(--ease-smooth-out) var(--petal-delay) forwards;
+}
+@keyframes t-petal-burst {
+  0% {
+    opacity: 0;
+    translate: 0 0;
+    scale: 0.4;
+    rotate: var(--petal-angle, 0deg);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    translate: var(--petal-x, 0px) var(--petal-y, 0px);
+    scale: 1;
+    rotate: calc(var(--petal-angle, 0deg) + 120deg);
+  }
+}
+
 /* --- Reduced motion ------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {
   .t-rise-in,
@@ -364,7 +503,9 @@ body {
   .t-modal-in,
   .t-stagger-item,
   .t-skel-pulse,
-  .t-shake-in {
+  .t-shake-in,
+  .t-swap-in,
+  .t-select-pop {
     animation: none !important;
   }
   .t-shimmer::before {
@@ -381,5 +522,21 @@ body {
   .t-success-check svg path {
     animation: none !important;
     stroke-dashoffset: 0 !important;
+  }
+  /* :active (0,2,0) out-specifies the bare class — cover both. */
+  .t-press,
+  .t-press:active {
+    transition: none !important;
+  }
+  .t-checkbox {
+    transition: none;
+  }
+  .t-checkbox[data-checked] svg path {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+  .t-petals span {
+    animation: none !important;
+    opacity: 0 !important;
   }
 }

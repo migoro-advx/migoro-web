@@ -70,7 +70,7 @@ export default function RecognizeStep() {
               <button
                 type="button"
                 onClick={() => proceed(chosen ?? null)}
-                className="shrink-0 rounded-2xl bg-accent py-2 text-sm text-white block w-18 transition-transform duration-150 active:scale-95"
+                className="shrink-0 rounded-2xl bg-accent py-2 text-sm text-white block w-18 t-press"
               >
                 确认
               </button>
@@ -117,14 +117,14 @@ export default function RecognizeStep() {
         <button
           type="button"
           onClick={() => setStep('capture')}
-          className="col-span-1 w-full rounded-full bg-ink/5 py-3.5 text-sm text-ink transition-transform duration-150 active:scale-95"
+          className="col-span-1 w-full rounded-full bg-ink/5 py-3.5 text-sm text-ink t-press"
         >
           重拍
         </button>
         <button
           type="button"
           onClick={() => proceed(chosen ?? null)}
-          className="col-span-1 w-full rounded-full bg-ink py-3.5 text-sm text-white transition-transform duration-150 active:scale-95"
+          className="col-span-1 w-full rounded-full bg-ink py-3.5 text-sm text-white t-press"
         >
           继续
         </button>

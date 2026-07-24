@@ -14,7 +14,7 @@ export function AuthOverlay() {
               <SignUpButton mode="modal">
                 <button
                   type="button"
-                  className="w-full rounded-full border border-gray-300 bg-white px-4 py-2.5 font-medium text-gray-900 transition duration-150 hover:bg-gray-50 active:scale-95"
+                  className="w-full rounded-full border border-gray-300 bg-white px-4 py-2.5 font-medium text-gray-900 t-press hover:bg-gray-50"
                 >
                   创建账户
                 </button>
@@ -22,7 +22,7 @@ export function AuthOverlay() {
               <SignInButton mode="modal">
                 <button
                   type="button"
-                  className="w-full rounded-full bg-blue-600 px-4 py-2.5 font-medium text-white transition duration-150 hover:bg-blue-700 active:scale-95"
+                  className="w-full rounded-full bg-blue-600 px-4 py-2.5 font-medium text-white t-press hover:bg-blue-700"
                 >
                   登录
                 </button>

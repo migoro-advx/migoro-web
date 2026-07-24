@@ -1,6 +1,7 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { ClientOnly, createFileRoute } from '@tanstack/react-router'
 import { useAtomValue, useSetAtom } from 'jotai'
+import NumberFlow, { NumberFlowGroup } from '@number-flow/react'
 
 import { AuthOverlay } from '#/components/AuthOverlay'
 import BottomNav, { NAV_OFFSET } from '#/components/BottomNav'
@@ -46,14 +47,12 @@ function PinIcon() {
   )
 }
 
-/** "今天" / "昨天" / "N天前" + "M月D日" for the dial's center label. */
-function dayLabel(day: Date): string {
+/** Whole days back from today (0 = today) for the dial's center label. */
+function daysBackFrom(day: Date): number {
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const picked = new Date(day.getFullYear(), day.getMonth(), day.getDate())
-  const daysBack = Math.round((today.getTime() - picked.getTime()) / MS_PER_DAY)
-  const rel = daysBack <= 0 ? '今天' : daysBack === 1 ? '昨天' : `${daysBack}天前`
-  return `${rel} · ${picked.getMonth() + 1}月${picked.getDate()}日`
+  return Math.round((today.getTime() - picked.getTime()) / MS_PER_DAY)
 }
 
 function Home() {
@@ -68,11 +67,31 @@ function Home() {
   const { count, isLoading } = useSightings()
   const showEmptyState = Boolean(selectedSpecies) && !isLoading && count === 0
 
-  const subtitle = selectedSpecies
-    ? count > 0
-      ? `${selectedSpecies.commonName} · ${count}条实况`
-      : '暂无实况'
-    : undefined
+  // NumberFlow only rolls while the same instance's `value` changes, but a
+  // day switch swaps the SWR key and `count` collapses to 0 mid-flight, which
+  // would unmount the instance. Hold the last settled count through loads so
+  // the number rolls instead of flashing "暂无实况".
+  const [settledCount, setSettledCount] = useState(count)
+  useEffect(() => {
+    if (!isLoading) setSettledCount(count)
+  }, [isLoading, count])
+  // Only bridge same-species loads (day/bbox changes) — a species switch must
+  // not pair the new name with the old species' held count.
+  useEffect(() => {
+    setSettledCount(0)
+  }, [selectedSpecies?.id])
+  const displayCount = isLoading ? settledCount : count
+
+  const daysBack = daysBackFrom(selectedDay)
+  const subtitle = selectedSpecies ? (
+    displayCount > 0 ? (
+      <>
+        {selectedSpecies.commonName} · <NumberFlow value={displayCount} suffix="条实况" />
+      </>
+    ) : (
+      '暂无实况'
+    )
+  ) : undefined
 
   return (
     <div className="fixed inset-0">
@@ -143,7 +162,26 @@ function Home() {
         value={selectedDay}
         onChange={setSelectedDay}
         bottomOffset={NAV_OFFSET}
-        label={dayLabel(selectedDay)}
+        label={
+          // Numeric segments each get their own NumberFlow (suffix carries the
+          // unit) so they roll as the dial changes days; the group keeps their
+          // layout shifts in sync. 今天/昨天 are pure text — no digits to roll —
+          // so that segment swaps in via key remount instead.
+          <NumberFlowGroup>
+            <span>
+              {daysBack >= 2 ? (
+                <NumberFlow value={daysBack} suffix="天前" />
+              ) : (
+                <span key={daysBack} className="t-swap-in">
+                  {daysBack === 1 ? '昨天' : '今天'}
+                </span>
+              )}
+              {' · '}
+              <NumberFlow value={selectedDay.getMonth() + 1} suffix="月" />
+              <NumberFlow value={selectedDay.getDate()} suffix="日" />
+            </span>
+          </NumberFlowGroup>
+        }
         subtitle={subtitle}
       />
 

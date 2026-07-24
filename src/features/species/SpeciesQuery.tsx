@@ -169,7 +169,7 @@ function SeasonCard({
       type="button"
       onClick={() => onPick(species)}
       style={style}
-      className="t-stagger-item flex w-[34%] flex-col rounded-3xl bg-white p-2 text-left shadow-[0_8px_24px_rgba(214,138,95,.18)] ring-1 ring-black/5 transition-transform duration-150 active:scale-95"
+      className="t-stagger-item flex w-[34%] flex-col rounded-3xl bg-white p-2 text-left shadow-[0_8px_24px_rgba(214,138,95,.18)] ring-1 ring-black/5 t-press"
     >
       <span className="flex w-full items-center justify-center">
         <SpeciesFlower index={index} className="w-full block" />
@@ -202,7 +202,7 @@ function OtherRow({
           '--i': Math.min(index, 8),
         } as React.CSSProperties
       }
-      className="t-stagger-item flex items-center justify-between rounded-full px-5 py-4 text-left transition-transform duration-150 active:scale-95"
+      className="t-stagger-item flex items-center justify-between rounded-full px-5 py-4 text-left t-press"
     >
       <span className="text-sm font-medium text-ink">
         {species.commonName}

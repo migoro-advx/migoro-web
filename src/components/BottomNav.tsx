@@ -74,7 +74,7 @@ export default function BottomNav() {
         <Link
           to="/"
           aria-label="地图"
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-sage text-white transition-transform duration-150 active:scale-95"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-sage text-white t-press"
         >
           <LocateIcon />
         </Link>
@@ -83,7 +83,7 @@ export default function BottomNav() {
         <Link
           to="/share"
           aria-label="拍摄"
-          className="absolute left-1/2 -top-3 flex h-16 w-16 -translate-x-1/2 items-center justify-center rounded-full bg-accent-strong text-white transition-transform duration-150 active:scale-95"
+          className="absolute left-1/2 -top-3 flex h-16 w-16 -translate-x-1/2 items-center justify-center rounded-full bg-accent-strong text-white t-press"
         >
           <PlusIcon />
         </Link>
@@ -92,7 +92,7 @@ export default function BottomNav() {
         <Link
           to="/me"
           aria-label="我的"
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-sage text-white transition-transform duration-150 active:scale-95"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-sage text-white t-press"
         >
           <ProfileIcon />
         </Link>

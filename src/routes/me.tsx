@@ -9,6 +9,7 @@ import { useState } from 'react'
 import { ClientOnly, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Show, useClerk, useUser } from '@clerk/tanstack-react-start'
 import useSWR from 'swr'
+import NumberFlow from '@number-flow/react'
 
 import { AuthOverlay } from '#/components/AuthOverlay'
 import BottomNav, { NAV_OFFSET } from '#/components/BottomNav'
@@ -76,14 +77,22 @@ function MyPosts() {
         {(posts?.length ?? 0) > 0 && (
           <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
             <FilterChip
-              label={`全部 ${posts!.length}`}
+              label={
+                <>
+                  全部 <NumberFlow value={posts!.length} />
+                </>
+              }
               active={speciesFilter === null}
               onSelect={() => setSpeciesFilter(null)}
             />
             {chips.map(([id, count]) => (
               <FilterChip
                 key={id}
-                label={`${nameFor(id)} ${count}`}
+                label={
+                  <>
+                    {nameFor(id)} <NumberFlow value={count} />
+                  </>
+                }
                 active={speciesFilter === id}
                 onSelect={() => setSpeciesFilter(id)}
               />
@@ -123,16 +132,18 @@ function FilterChip({
   active,
   onSelect,
 }: {
-  label: string
+  label: React.ReactNode
   active: boolean
   onSelect: () => void
 }) {
   return (
+    // The pop replays via class toggle: gaining .t-select-pop on selection
+    // restarts the animation without remounting (keyboard focus survives).
     <button
       type="button"
       onClick={onSelect}
       className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors duration-150 ${
-        active ? 'bg-ink text-white' : 'bg-stone-100 text-ink'
+        active ? 't-select-pop bg-ink text-white' : 'bg-stone-100 text-ink'
       }`}
     >
       {label}

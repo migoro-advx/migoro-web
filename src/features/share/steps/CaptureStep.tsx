@@ -160,7 +160,7 @@ export default function CaptureStep({ onClose }: { onClose: () => void }) {
       <div className="px-5 pt-5 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
         <div className="grid grid-cols-3 items-center">
           <label className="cursor-pointer justify-self-start">
-            <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-celadon text-ink transition-transform duration-150 active:scale-95">
+            <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-celadon text-ink t-press">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden>
                 <rect
                   x="3"
@@ -195,7 +195,7 @@ export default function CaptureStep({ onClose }: { onClose: () => void }) {
             onClick={handleShutter}
             disabled={!cameraReady || busy}
             aria-label="拍照"
-            className="justify-self-center rounded-full border-4 border-white bg-transparent p-1 transition duration-150 active:scale-90 disabled:opacity-40"
+            className="justify-self-center rounded-full border-4 border-white bg-transparent p-1 t-press [--press-scale:0.9] disabled:opacity-40"
           >
             <span className="block h-14 w-14 rounded-full bg-white" />
           </button>
@@ -204,7 +204,7 @@ export default function CaptureStep({ onClose }: { onClose: () => void }) {
             type="button"
             onClick={() => setFacing(prev => (prev === 'environment' ? 'user' : 'environment'))}
             aria-label="翻转镜头"
-            className="flex h-16 w-16 items-center justify-center justify-self-end rounded-2xl bg-ink text-white transition-transform duration-150 active:scale-95"
+            className="flex h-16 w-16 items-center justify-center justify-self-end rounded-2xl bg-ink text-white t-press"
           >
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden>
               <path

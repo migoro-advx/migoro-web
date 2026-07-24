@@ -136,7 +136,7 @@ export default function PlacePanel() {
                   search: { date, ...(speciesId ? { species: speciesId } : {}) },
                 })
               }
-              className="mt-5 flex w-full items-center justify-center rounded-full bg-ink py-4 text-sm font-semibold text-white transition-transform duration-150 active:scale-95"
+              className="mt-5 flex w-full items-center justify-center rounded-full bg-ink py-4 text-sm font-semibold text-white t-press"
             >
               查看更多实况
               <span className="ml-1">

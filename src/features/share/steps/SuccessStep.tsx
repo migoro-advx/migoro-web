@@ -19,6 +19,20 @@ function formatMonthDay(iso: string): string {
   return `${d.getMonth() + 1}月${d.getDate()}日`
 }
 
+// Petal burst trajectories — eight pure-CSS petal shapes (no SVG illustration)
+// scattering radially from the check once its stroke finishes drawing.
+// Colors cycle the garden palette (peach-rim reads on white where peach won't).
+const PETALS = [
+  { x: -42, y: -34, angle: -30, color: 'var(--color-peach-rim)' },
+  { x: 10, y: -52, angle: 15, color: 'var(--color-accent)' },
+  { x: 46, y: -26, angle: 60, color: 'var(--color-sage)' },
+  { x: 58, y: 8, angle: -15, color: 'var(--color-peach-rim)' },
+  { x: 40, y: 40, angle: 40, color: 'var(--color-accent)' },
+  { x: -6, y: 52, angle: 75, color: 'var(--color-sage)' },
+  { x: -48, y: 30, angle: 20, color: 'var(--color-accent)' },
+  { x: -58, y: -6, angle: -60, color: 'var(--color-sage)' },
+]
+
 /** Month/day + time, e.g. "7月23日 09:41" — used in the result card. */
 function formatMonthDayTime(iso: string): string {
   const d = new Date(iso)
@@ -58,22 +72,41 @@ export default function SuccessStep({ onClose }: { onClose: () => void }) {
       {/* Orange success check — stroke-draw celebration (10-success-check).
           The step mounts fresh, so data-state="in" plays the appear on mount.
           --i slots it into the same stagger timeline as its siblings.
-          Path length ≈ 30.4 → stroke-dasharray 31 in styles.css. */}
-      <span
-        className="t-success-check my-8 text-accent"
-        data-state="in"
-        style={{ '--i': 1 } as React.CSSProperties}
-        aria-hidden
-      >
-        <svg width="25" height="19" viewBox="0 0 25 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M2 10l7 7L23 2"
-            stroke="currentColor"
-            strokeWidth="3.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+          Path length ≈ 30.4 → stroke-dasharray 31 in styles.css.
+          self-start keeps the wrapper check-sized so the petal burst radiates
+          from the check itself; petals sit outside .t-success-check so they
+          don't inherit its rotate/bob. */}
+      <span className="relative my-8 self-start" aria-hidden>
+        <span
+          className="t-success-check text-accent"
+          data-state="in"
+          style={{ '--i': 1 } as React.CSSProperties}
+        >
+          <svg width="25" height="19" viewBox="0 0 25 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M2 10l7 7L23 2"
+              stroke="currentColor"
+              strokeWidth="3.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+        <span className="t-petals">
+          {PETALS.map((p, i) => (
+            <span
+              key={i}
+              style={
+                {
+                  '--petal-x': `${p.x}px`,
+                  '--petal-y': `${p.y}px`,
+                  '--petal-angle': `${p.angle}deg`,
+                  '--petal-color': p.color,
+                } as React.CSSProperties
+              }
+            />
+          ))}
+        </span>
       </span>
 
       <h1
@@ -121,21 +154,21 @@ export default function SuccessStep({ onClose }: { onClose: () => void }) {
         <button
           type="button"
           onClick={onClose}
-          className="w-full rounded-full bg-ink px-6 py-3 text-sm text-white transition-transform duration-150 active:scale-95"
+          className="w-full rounded-full bg-ink px-6 py-3 text-sm text-white t-press"
         >
           查看地图
         </button>
         <button
           type="button"
           onClick={viewPost}
-          className="w-full rounded-full bg-ink/5 px-6 py-3 text-sm text-ink transition-transform duration-150 active:scale-95"
+          className="w-full rounded-full bg-ink/5 px-6 py-3 text-sm text-ink t-press"
         >
           查看帖子
         </button>
         <button
           type="button"
           onClick={() => resetShare()}
-          className="w-full rounded-full bg-ink/5 px-6 py-3 text-sm text-ink transition-transform duration-150 active:scale-95"
+          className="w-full rounded-full bg-ink/5 px-6 py-3 text-sm text-ink t-press"
         >
           继续拍摄
         </button>

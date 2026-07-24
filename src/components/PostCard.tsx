@@ -29,7 +29,7 @@ export default function PostCard({
       type="button"
       onClick={onOpen}
       style={index != null ? ({ '--i': Math.min(index, 8) } as React.CSSProperties) : undefined}
-      className={`flex flex-col text-left transition-transform duration-150 active:scale-[0.98] ${
+      className={`flex flex-col text-left t-press [--press-scale:0.98] ${
         index != null ? 't-stagger-item' : ''
       }`}
     >

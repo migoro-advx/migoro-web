@@ -102,6 +102,9 @@ export default function DetailStep() {
           <legend className="text-xs text-muted">观赏状态 *</legend>
           <div className="mt-2 flex flex-wrap gap-2">
             {BLOOM_STAGES.map(stage => (
+              // Gaining .t-select-pop on selection restarts the pop via class
+              // toggle — no remount, so keyboard focus survives; deselecting
+              // just drops the class (no pop).
               <button
                 key={stage}
                 type="button"
@@ -113,7 +116,7 @@ export default function DetailStep() {
                 }
                 className={
                   form.bloomStage === stage
-                    ? 'rounded-full bg-accent px-4 py-2 text-sm text-white transition-colors duration-150'
+                    ? 't-select-pop rounded-full bg-accent px-4 py-2 text-sm text-white transition-colors duration-150'
                     : 'rounded-full bg-ink/5 px-4 py-2 text-sm text-ink transition-colors duration-150'
                 }
               >
@@ -144,14 +147,28 @@ export default function DetailStep() {
           <span className="mt-1 block text-xs text-muted">现场拍摄 · 可信字段，只读</span>
         </div>
 
-        {/* Confirmation gate. */}
+        {/* Confirmation gate — draw-on checkbox: the real input stays sr-only
+            for accessibility; the visual box mirrors its state and strokes
+            the white check in on tick (25-checkbox-check). */}
         <label className="flex items-center gap-2 text-sm text-ink">
           <input
             type="checkbox"
             checked={confirmed}
             onChange={e => setConfirmed(e.target.checked)}
-            className="h-4 w-4 accent-ink"
+            className="sr-only"
           />
+          <span className="t-checkbox" data-checked={confirmed || undefined} aria-hidden>
+            {/* Path length ≈ 13.5 → --checkbox-dash: 14 in styles.css. */}
+            <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+              <path
+                d="M1.5 5.5l3 3L10.5 1.5"
+                stroke="white"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
           我已确认拍摄时间和地点
         </label>
 
@@ -167,7 +184,7 @@ export default function DetailStep() {
         <button
           type="submit"
           disabled={submitting || !confirmed}
-          className="mx-auto rounded-full bg-ink px-16 py-3 text-sm text-white transition duration-150 active:scale-95 disabled:opacity-40"
+          className="mx-auto rounded-full bg-ink px-16 py-3 text-sm text-white t-press disabled:opacity-40"
         >
           {submitting ? '发布中…' : '发布实况'}
         </button>
