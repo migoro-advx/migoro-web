@@ -1,71 +1,51 @@
-// Step 3: detail editing. Pre-fills the confirmed species and the captured
-// coordinates (from EXIF or geolocation), lets the user adjust species, bloom
-// stage, location and description, then submits via the API shell. Coordinates
-// stay in MapTiler LngLat ([lng, lat]) end to end.
+// Step 4: publish editing ("发布实况"). Pre-fills the confirmed species, bloom
+// stage, and the location captured in the previous step, plus the read-only
+// on-site capture time. The user completes the bloom stage / description and,
+// after confirming time & location, publishes via the API shell — which routes
+// to the success step. Coordinates stay in MapTiler LngLat end to end.
 //
-// Minimal styling — real design comes later.
-import { useEffect, useRef } from 'react'
-import { useAtom, useAtomValue } from 'jotai'
+// Layout mirrors the "发布实况" design. The thumbnail "+" is presentational
+// (single-image model for now).
+import { useState } from 'react'
+import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import useSWR from 'swr'
 
 import { BLOOM_STAGES, api } from '#/lib/api'
-import type { CoordsSource, LngLat } from '#/lib/api'
-import { reverseGeocode } from '#/lib/geocoding'
 import {
   captureAtom,
   formAtom,
   selectedSpeciesAtom,
+  stepAtom,
   submitStateAtom,
-  useResetShare,
 } from '#/features/share/state'
 
-const COORDS_SOURCE_LABEL: Record<CoordsSource, string> = {
-  exif: '来自照片 EXIF',
-  geolocation: '来自当前定位',
-  none: '暂无定位，请手动填写',
+const PEACH = '#f7d9c9'
+
+/** Format an ISO capture time as e.g. "2026年7月23日 09:41". */
+function formatCaptureTime(iso: string): string {
+  const d = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-export default function DetailStep({ onClose }: { onClose: () => void }) {
+export default function DetailStep() {
   const capture = useAtomValue(captureAtom)
   const [selectedSpecies, setSelectedSpecies] = useAtom(selectedSpeciesAtom)
   const [form, setForm] = useAtom(formAtom)
   const [submitState, setSubmitState] = useAtom(submitStateAtom)
-  const resetShare = useResetShare()
-  // Once the user edits the location name, stop auto-filling it.
-  const locationEditedRef = useRef(false)
+  const setStep = useSetAtom(stepAtom)
+  const [confirmed, setConfirmed] = useState(false)
 
   const { data: speciesList = [] } = useSWR('species', () => api.listSpecies(), {
     revalidateOnFocus: false,
   })
 
-  // Resolve a human-readable place name from the coordinates (EXIF or
-  // geolocation) so the location field defaults to the current location.
-  const { data: resolvedPlace, isLoading: resolvingLocation } = useSWR(
-    form.coords ? ['reverse', form.coords[0], form.coords[1]] : null,
-    () => reverseGeocode(form.coords as LngLat),
-    { revalidateOnFocus: false, shouldRetryOnError: false },
-  )
-
-  // Seed the location coordinates from the capture once when entering the step.
-  useEffect(() => {
-    if (form.coords == null && capture?.meta.coords) {
-      setForm(prev => ({ ...prev, coords: capture.meta.coords }))
-    }
-  }, [])
-
-  // Fill the resolved place name unless the user has already typed one.
-  useEffect(() => {
-    if (!locationEditedRef.current && resolvedPlace) {
-      setForm(prev => (prev.locationName ? prev : { ...prev, locationName: resolvedPlace }))
-    }
-  }, [resolvedPlace, setForm])
-
-  const coordsSource = capture?.meta.coordsSource ?? 'none'
   const submitting = submitState.status === 'pending'
+  const locationSummary = [form.locationName, form.areaName].filter(Boolean).join(' · ')
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
-    if (submitting || !capture) return
+    if (submitting || !capture || !confirmed) return
     setSubmitState({ status: 'pending' })
     try {
       const result = await api.createPost({
@@ -77,8 +57,7 @@ export default function DetailStep({ onClose }: { onClose: () => void }) {
         description: form.description,
       })
       setSubmitState({ status: 'success', id: result.id })
-      resetShare()
-      onClose()
+      setStep('success')
     } catch (error) {
       setSubmitState({
         status: 'error',
@@ -87,44 +66,55 @@ export default function DetailStep({ onClose }: { onClose: () => void }) {
     }
   }
 
-  function updateCoord(index: 0 | 1, value: string) {
-    const num = Number(value)
-    if (Number.isNaN(num)) return
-    setForm(prev => {
-      const base = prev.coords ?? [0, 0]
-      const next: [number, number] = index === 0 ? [num, base[1]] : [base[0], num]
-      return { ...prev, coords: next }
-    })
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="flex h-full flex-col">
-      <div className="flex-1 space-y-5 overflow-y-auto p-4">
-        {capture && (
-          <img src={capture.dataUrl} alt="所拍照片" className="h-40 w-full rounded object-cover" />
-        )}
+    <form onSubmit={handleSubmit} className="flex h-full flex-col bg-white">
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 pt-[calc(env(safe-area-inset-top)+1rem)] pb-4">
+        <div>
+          <h1 className="text-3xl font-bold text-neutral-900">发布实况</h1>
+          <p className="mt-1 text-sm text-neutral-400">补齐可验证的花叶情报</p>
+        </div>
 
-        <label className="block">
-          <span className="mb-1 block text-sm text-gray-700">物种</span>
-          <select
-            value={selectedSpecies?.id ?? ''}
-            onChange={event =>
-              setSelectedSpecies(speciesList.find(s => s.id === event.target.value) ?? null)
-            }
-            className="w-full rounded border border-gray-300 px-3 py-2"
+        {/* Thumbnails. Single-image model: the capture plus a presentational +. */}
+        <div className="flex items-center gap-3">
+          <span
+            className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl"
+            style={{ backgroundColor: PEACH }}
           >
-            <option value="">未选择</option>
-            {speciesList.map(species => (
-              <option key={species.id} value={species.id}>
-                {species.commonName}（{species.scientificName}）
-              </option>
-            ))}
-          </select>
-        </label>
+            {capture && (
+              <img src={capture.dataUrl} alt="所拍照片" className="h-full w-full object-cover" />
+            )}
+          </span>
+          <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-neutral-100 text-2xl text-neutral-400">
+            +
+          </span>
+        </div>
 
+        {/* 物种 */}
+        <div className="rounded-2xl bg-neutral-100 px-4 py-3">
+          <span className="block text-xs text-neutral-400">物种 *</span>
+          <div className="mt-0.5 flex items-center gap-2">
+            <select
+              value={selectedSpecies?.id ?? ''}
+              onChange={e =>
+                setSelectedSpecies(speciesList.find(s => s.id === e.target.value) ?? null)
+              }
+              className="max-w-full bg-transparent text-sm text-neutral-900 focus:outline-none"
+            >
+              <option value="">未选择</option>
+              {speciesList.map(species => (
+                <option key={species.id} value={species.id}>
+                  {species.commonName}
+                </option>
+              ))}
+            </select>
+            {selectedSpecies && <span className="text-sm text-neutral-400">· 用户确认</span>}
+          </div>
+        </div>
+
+        {/* 观赏状态 */}
         <fieldset>
-          <legend className="mb-1 text-sm text-gray-700">花开状态</legend>
-          <div className="flex flex-wrap gap-2">
+          <legend className="text-xs text-neutral-400">观赏状态 *</legend>
+          <div className="mt-2 flex flex-wrap gap-2">
             {BLOOM_STAGES.map(stage => (
               <button
                 key={stage}
@@ -137,8 +127,8 @@ export default function DetailStep({ onClose }: { onClose: () => void }) {
                 }
                 className={
                   form.bloomStage === stage
-                    ? 'rounded border border-gray-900 bg-gray-900 px-3 py-1.5 text-sm text-white'
-                    : 'rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700'
+                    ? 'rounded-full bg-neutral-900 px-4 py-2 text-sm text-white'
+                    : 'rounded-full bg-neutral-100 px-4 py-2 text-sm text-neutral-700'
                 }
               >
                 {stage}
@@ -147,47 +137,48 @@ export default function DetailStep({ onClose }: { onClose: () => void }) {
           </div>
         </fieldset>
 
-        <label className="block">
-          <span className="mb-1 block text-sm text-gray-700">拍摄地点</span>
-          <input
-            type="text"
-            value={form.locationName}
-            onChange={event => {
-              locationEditedRef.current = true
-              setForm(prev => ({ ...prev, locationName: event.target.value }))
-            }}
-            placeholder={resolvingLocation ? '定位中…' : '填写拍摄地点'}
-            className="w-full rounded border border-gray-300 px-3 py-2"
-          />
-          <span className="mt-1 block text-xs text-gray-500">坐标{COORDS_SOURCE_LABEL[coordsSource]}，可修正</span>
-          <div className="mt-2 flex gap-2">
-            <input
-              type="number"
-              step="any"
-              value={form.coords?.[0] ?? ''}
-              onChange={event => updateCoord(0, event.target.value)}
-              placeholder="经度 lng"
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-            />
-            <input
-              type="number"
-              step="any"
-              value={form.coords?.[1] ?? ''}
-              onChange={event => updateCoord(1, event.target.value)}
-              placeholder="纬度 lat"
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-            />
-          </div>
-        </label>
+        {/* 具体点位 — corrected in the location step; tap to go back. */}
+        <button
+          type="button"
+          onClick={() => setStep('location')}
+          className="block w-full rounded-2xl bg-neutral-100 px-4 py-3 text-left"
+        >
+          <span className="block text-xs text-neutral-400">具体点位 *</span>
+          <span className="mt-0.5 block text-sm text-neutral-900">
+            {locationSummary || '点按修正拍摄位置'}
+          </span>
+        </button>
 
-        <label className="block">
-          <span className="mb-1 block text-sm text-gray-700">描述</span>
+        {/* 拍摄时间 — read-only, trusted field. */}
+        <div className="rounded-2xl bg-neutral-100 px-4 py-3">
+          <span className="block text-xs text-neutral-400">拍摄时间 *</span>
+          <span className="mt-0.5 block text-sm text-neutral-900">
+            {capture ? formatCaptureTime(capture.meta.capturedAt) : '—'}
+          </span>
+          <span className="mt-1 block text-xs text-neutral-400">现场拍摄 · 可信字段，只读</span>
+        </div>
+
+        {/* 正文 */}
+        <label className="block rounded-2xl bg-neutral-100 px-4 py-3">
+          <span className="block text-xs text-neutral-400">正文（选填）</span>
           <textarea
             value={form.description}
-            onChange={event => setForm(prev => ({ ...prev, description: event.target.value }))}
+            onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
             rows={3}
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            placeholder="补充现场情况或观赏建议..."
+            className="mt-0.5 w-full resize-none bg-transparent text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none"
           />
+        </label>
+
+        {/* Confirmation gate. */}
+        <label className="flex items-center gap-2 text-sm text-neutral-700">
+          <input
+            type="checkbox"
+            checked={confirmed}
+            onChange={e => setConfirmed(e.target.checked)}
+            className="h-4 w-4 accent-neutral-900"
+          />
+          我已确认拍摄时间和地点
         </label>
 
         {submitState.status === 'error' && (
@@ -195,13 +186,14 @@ export default function DetailStep({ onClose }: { onClose: () => void }) {
         )}
       </div>
 
-      <div className="border-t border-gray-200 px-4 py-3">
+      {/* Bottom action: 发布实况. */}
+      <div className="flex items-center gap-3 px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
         <button
           type="submit"
-          disabled={submitting}
-          className="w-full rounded-full bg-blue-600 px-4 py-2.5 font-medium text-white disabled:opacity-50"
+          disabled={submitting || !confirmed}
+          className="rounded-full bg-neutral-900 px-8 py-3 text-sm text-white disabled:opacity-40"
         >
-          {submitting ? '发送中…' : '发送'}
+          {submitting ? '发布中…' : '发布实况'}
         </button>
       </div>
     </form>

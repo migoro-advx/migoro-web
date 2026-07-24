@@ -1,9 +1,12 @@
 // Step 1: capture. In-app camera viewfinder (getUserMedia) with a shutter, plus
 // an album-selection entry. Camera captures use `now` + current geolocation;
 // album uploads read EXIF for capture time (required) and GPS (falls back to
-// geolocation, to be confirmed by the user in the detail step).
+// geolocation, to be confirmed by the user in the location step).
 //
-// Minimal styling — real design comes later.
+// Layout mirrors the "AI拍照" design: black frame, top toolbar, a rounded
+// viewfinder card, and a 相册 | shutter | 识别 bottom bar. The 闪光/网格/镜头
+// labels and the 识别 label are presentational — they align the layout to the
+// mock; the real camera controls behind them are out of scope for now.
 import { useEffect, useRef, useState } from 'react'
 import { useSetAtom } from 'jotai'
 
@@ -11,6 +14,9 @@ import type { CaptureMeta } from '#/lib/api'
 import { getCurrentLngLat } from '#/lib/geolocation'
 import { readCaptureMeta } from '#/lib/exif'
 import { captureAtom, stepAtom } from '#/features/share/state'
+
+// Peach placeholder used across the journey while no real image is present.
+const PEACH = '#f7d9c9'
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -21,7 +27,7 @@ function readFileAsDataUrl(file: File): Promise<string> {
   })
 }
 
-export default function CaptureStep() {
+export default function CaptureStep({ onClose }: { onClose: () => void }) {
   const setCapture = useSetAtom(captureAtom)
   const setStep = useSetAtom(stepAtom)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -119,45 +125,77 @@ export default function CaptureStep() {
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="relative flex-1 bg-black">
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className="h-full w-full object-cover"
-        />
-        {cameraError && (
-          <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-white">
-            {cameraError}
-          </div>
-        )}
+    <div className="flex h-full flex-col bg-black text-white">
+      {/* Top toolbar. ✕ closes; the rest are presentational labels. */}
+      <div className="flex items-center gap-5 px-5 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3 text-sm">
+        <button type="button" onClick={onClose} aria-label="关闭" className="text-lg leading-none">
+          ✕
+        </button>
+        <span className="text-white/80">闪光</span>
+        <span className="text-white/80">网格</span>
+        <span className="text-white/80">镜头</span>
       </div>
 
-      {notice && <p className="bg-amber-100 px-4 py-2 text-sm text-amber-900">{notice}</p>}
-
-      <div className="flex items-center justify-between gap-4 px-6 py-4">
-        <label className="cursor-pointer text-sm text-gray-700 underline">
-          从相册选择
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleAlbum}
-            disabled={busy}
+      {/* Viewfinder card. */}
+      <div className="flex flex-1 items-center px-5">
+        <div
+          className="relative aspect-[3/4] w-full overflow-hidden rounded-3xl"
+          style={{ backgroundColor: PEACH }}
+        >
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="h-full w-full object-cover"
           />
-        </label>
+          {/* Inner framing guide. */}
+          <div className="pointer-events-none absolute inset-6 rounded-xl border border-white/50" />
+          {cameraError ? (
+            <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-neutral-700">
+              {cameraError}
+            </div>
+          ) : (
+            <div className="absolute inset-x-0 bottom-6 flex justify-center">
+              <span className="rounded-full bg-black/55 px-3 py-1.5 text-xs text-white">
+                请靠近主体 · 保持稳定
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
 
-        <button
-          type="button"
-          onClick={handleShutter}
-          disabled={!cameraReady || busy}
-          aria-label="拍照"
-          className="h-16 w-16 rounded-full border-4 border-gray-400 bg-white disabled:opacity-40"
-        />
+      {notice && (
+        <p className="mx-5 mt-3 rounded-xl bg-amber-100 px-4 py-2 text-sm text-amber-900">{notice}</p>
+      )}
 
-        <span className="w-16" />
+      {/* Bottom bar: 相册 | shutter | 识别. */}
+      <div className="px-5 pt-5 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+        <div className="grid grid-cols-3 items-center">
+          <label className="cursor-pointer justify-self-start text-sm text-white/80">
+            相册
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAlbum}
+              disabled={busy}
+            />
+          </label>
+
+          <button
+            type="button"
+            onClick={handleShutter}
+            disabled={!cameraReady || busy}
+            aria-label="拍照"
+            className="justify-self-center rounded-full border-4 border-white bg-transparent p-1 disabled:opacity-40"
+          >
+            <span className="block h-14 w-14 rounded-full bg-white" />
+          </button>
+
+          <span className="justify-self-end text-sm text-white/80">识别</span>
+        </div>
+        <p className="mt-4 text-center text-xs text-white/50">拍摄时将记录设备时间与位置</p>
       </div>
     </div>
   )

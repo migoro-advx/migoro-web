@@ -24,9 +24,9 @@ export interface Species {
 }
 
 /** Bloom / defoliation stage. Kept as open-ended zh-CN labels for now. */
-export type BloomStage = '初开' | '五成' | '满开' | '凋落'
+export type BloomStage = '含苞' | '初开' | '五成' | '满开' | '凋落'
 
-export const BLOOM_STAGES: readonly BloomStage[] = ['初开', '五成', '满开', '凋落']
+export const BLOOM_STAGES: readonly BloomStage[] = ['含苞', '初开', '五成', '满开', '凋落']
 
 /** How a coordinate was obtained, surfaced so the user can confirm/correct it. */
 export type CoordsSource = 'geolocation' | 'exif' | 'none'
