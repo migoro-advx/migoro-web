@@ -34,15 +34,17 @@ const SETTLE_DIST = 0.15 // deg — settle threshold
 const MAX_DT = 0.032 // clamp per-frame step to avoid jumps after dropped frames
 const WHEEL_VELOCITY_K = 0.12 // wheel delta -> injected angular velocity
 
+// Dial palette (tuned to the peach mockup).
+const DIAL_PEACH = '#f6ccae' // outer arc band (light orange)
+const DIAL_CORE = '#ffffff' // white dome body (peach is only a rim ring)
+const DIAL_TICK = '#dd8a5f' // salmon radial ticks
+const DIAL_ACCENT = '#e8865a' // apex pointer (orange)
+
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
 /** Days between two dates, ignoring intra-day time (positive when `later` is newer). */
 function daysBetween(later: Date, earlier: Date): number {
   return Math.round((later.getTime() - earlier.getTime()) / MS_PER_DAY)
-}
-
-function formatLabel(date: Date): string {
-  return `${date.getMonth() + 1}月${date.getDate()}日`
 }
 
 export interface TimeDialProps {
@@ -325,31 +327,34 @@ export default function TimeDial({
           height: 0,
           borderLeft: '8px solid transparent',
           borderRight: '8px solid transparent',
-          borderTop: '13px solid #e5484d',
+          borderTop: `13px solid ${DIAL_ACCENT}`,
           filter: 'drop-shadow(0 1px 2px rgba(0,0,0,.3))',
         }}
       >
         <span
           className="absolute left-1/2 -translate-x-1/2"
-          style={{ top: 12, width: 2, height: 18, borderRadius: 1, background: '#e5484d' }}
+          style={{ top: 12, width: 2, height: 18, borderRadius: 1, background: DIAL_ACCENT }}
         />
       </div>
 
-      {/* Center readout — day label + sighting subtitle + dial hint. Sits well
-          below the tick band so it never overlaps the rotating tick labels.
-          Gated behind `mounted` to keep date-driven text off the SSR output. */}
+      {/* Center readout — day label + sighting subtitle + dial hint. The dome
+          no longer draws per-tick date labels, so this sits alone in the clear
+          zone below the tick band as one balanced group. Gated behind `mounted`
+          to keep date-driven text off the SSR output. */}
       {mounted && (label || subtitle) && (
         <div
           className="pointer-events-none absolute left-1/2 z-20 flex -translate-x-1/2 flex-col items-center text-center"
-          style={{ top: 84 }}
+          style={{ top: 80 }}
         >
           {label && (
-            <div className="text-2xl font-bold whitespace-nowrap text-neutral-900">{label}</div>
+            <div className="text-2xl leading-tight font-bold tracking-tight whitespace-nowrap text-neutral-900">
+              {label}
+            </div>
           )}
           {subtitle && (
-            <div className="mt-1 text-sm whitespace-nowrap text-neutral-500">{subtitle}</div>
+            <div className="mt-1.5 text-sm whitespace-nowrap text-neutral-500">{subtitle}</div>
           )}
-          <div className="mt-2 text-xs whitespace-nowrap text-neutral-400">
+          <div className="mt-3 text-[11px] tracking-wide whitespace-nowrap text-neutral-400">
             最近{maxDaysBack}天 · 每7天为一周
           </div>
         </div>
@@ -357,20 +362,20 @@ export default function TimeDial({
 
       {/* Rotating dome (visual only). */}
       <div
-        className="pointer-events-none absolute bottom-0 left-1/2 rounded-full bg-white/90"
+        className="pointer-events-none absolute bottom-0 left-1/2 rounded-full"
         aria-hidden
         style={{
           width: RADIUS * 2,
           height: RADIUS * 2,
           transform: `translate(-50%, calc(${2 * RADIUS}px - ${revealHeight})) rotate(${rotation}deg)`,
+          background: `radial-gradient(circle at center, ${DIAL_CORE} 0 92%, ${DIAL_PEACH} 96% 100%)`,
           boxShadow:
-            '0 -8px 32px rgba(60,50,40,.14), inset 0 3px 10px rgba(255,255,255,.9), inset 0 -2px 8px rgba(0,0,0,.06)',
+            '0 -8px 32px rgba(214,138,95,.22), inset 0 3px 10px rgba(255,255,255,.9), inset 0 -2px 8px rgba(0,0,0,.06)',
         }}
       >
         {days.map(d => {
           const base = -d * DEG_PER_DAY
           const major = d % 7 === 0
-          const labelDate = new Date(now.getTime() - d * MS_PER_DAY)
           return (
             <div
               key={d}
@@ -382,23 +387,12 @@ export default function TimeDial({
                 className="absolute left-1/2 -translate-x-1/2"
                 style={{
                   top: 14,
-                  width: major ? 2 : 1,
-                  height: major ? 16 : 8,
-                  background: major ? 'rgba(50,35,35,.75)' : 'rgba(60,45,45,.4)',
+                  width: major ? 3 : 2,
+                  height: major ? 15 : 9,
+                  borderRadius: major ? 1.5 : 1,
+                  background: major ? DIAL_TICK : 'rgba(221,138,95,.55)',
                 }}
               />
-              {major && mounted && (
-                <span
-                  className="absolute left-1/2 text-[11px] font-semibold tracking-wide whitespace-nowrap text-stone-600"
-                  style={{
-                    top: 36,
-                    // Counter-rotate to keep the label upright on screen.
-                    transform: `translateX(-50%) rotate(${-(rotation + base)}deg)`,
-                  }}
-                >
-                  {formatLabel(labelDate)}
-                </span>
-              )}
             </div>
           )
         })}
