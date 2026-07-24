@@ -11,8 +11,23 @@ import { Link } from '@tanstack/react-router'
  */
 const NAV_CONTENT_HEIGHT = 60
 
+/** Padding below the content row — matches the `<nav>`'s `pb-6` (1.5rem). */
+const NAV_BOTTOM_INSET = 24
+
+/** How far the raised center FAB rises above the content row — matches `-top-3`. */
+const FAB_OVERSHOOT = 12
+
 /** CSS length from the viewport bottom to the top of the nav content row. */
 export const NAV_OFFSET = `calc(${NAV_CONTENT_HEIGHT}px + env(safe-area-inset-bottom))`
+
+/**
+ * Full clearance from the viewport bottom to the top of the raised center FAB,
+ * plus the device's bottom safe-area inset. Full-width bottom overlays (e.g. the
+ * place panel) must clear this so they never overlap the nav bar, its protruding
+ * 拍摄 button, or a home indicator.
+ * = content row (60) + pb-6 (24) + FAB overshoot (12) + safe-area inset.
+ */
+export const NAV_FAB_CLEARANCE = `calc(${NAV_CONTENT_HEIGHT + NAV_BOTTOM_INSET + FAB_OVERSHOOT}px + env(safe-area-inset-bottom))`
 
 /** Concentric crosshair — the 地图/定位 affordance. */
 function LocateIcon() {

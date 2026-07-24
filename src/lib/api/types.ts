@@ -82,7 +82,72 @@ export interface Sighting {
   thumbnailUrl?: string
   /** Optional finer-grained area within the place, e.g. "湖畔入口 · 东侧花带". */
   areaName?: string
+  /** Place this sighting belongs to; lets a marker click open the place panel. */
+  placeId?: string
 }
+
+/**
+ * A named place (地点) that aggregates sightings — e.g. a park entrance area.
+ * `coords` is the place's anchor; individual posts share it (with a tiny map
+ * jitter) so a place reads as one marker/cluster.
+ */
+export interface Place {
+  id: string
+  /** Park / venue name, e.g. "梧桐公园". */
+  parkName: string
+  /** Finer-grained area within the park, e.g. "湖畔入口". */
+  areaName: string
+  coords: LngLat
+  /** Sensitive area — the UI shows only an approximate-location note. */
+  sensitive?: boolean
+}
+
+/** How a post's capture time was obtained; surfaced as a trust signal. */
+export type TimeSource = 'onsite' | 'album'
+
+/**
+ * A published sighting (帖子) with the richer fields the waterfall and detail
+ * pages need. A `Sighting` is the map projection of a `Post`.
+ */
+export interface Post {
+  id: string
+  placeId: string
+  speciesId: string
+  bloomStage: BloomStage
+  /** ISO 8601 capture time. */
+  capturedAt: string
+  /** ISO 8601 publish time. */
+  publishedAt: string
+  timeSource: TimeSource
+  description?: string
+}
+
+/**
+ * Query shared by the place panel and the waterfall — always place + day
+ * scoped, optionally narrowed to a single species. `bbox` resolves the seeded
+ * world's anchor when the panel/route is hit before the map has an anchor.
+ */
+export interface PlacePostsQuery {
+  placeId: string
+  /** Selected day (local calendar day, YYYY-MM-DD). */
+  date: string
+  speciesId?: string
+  bbox?: [number, number, number, number]
+}
+
+/** Aggregated view of a place for the half-screen panel. */
+export interface PlaceSummary {
+  place: Place
+  /** Representative species/stage/date for the panel headline. */
+  headline: { species: Species; bloomStage: BloomStage; capturedAt: string }
+  /** Recent posts (that day, species-filtered) for the thumbnail row. */
+  recentPosts: Post[]
+  /** Total matching posts, for the "查看更多实况" affordance. */
+  count: number
+}
+
+/** A post with its place and species resolved, for the detail page. */
+export type PostDetail = Post & { place: Place; species: Species }
 
 /**
  * Query for sightings shown on the map. `date` is the selected day (local
@@ -101,4 +166,10 @@ export interface Api {
   createPost: (payload: CreatePostPayload) => Promise<CreatePostResult>
   listSpecies: () => Promise<Species[]>
   listSightings: (params: SightingsQuery) => Promise<Sighting[]>
+  /** Aggregated place view for the half-screen panel. Mock-only (no backend endpoint yet). */
+  getPlaceSummary: (params: PlacePostsQuery) => Promise<PlaceSummary>
+  /** Posts at a place, sorted by capture time desc, for the waterfall. Mock-only. */
+  listPlacePosts: (params: PlacePostsQuery) => Promise<Post[]>
+  /** Single post detail by id, with place + species resolved. Mock-only. */
+  getPost: (postId: string) => Promise<PostDetail>
 }

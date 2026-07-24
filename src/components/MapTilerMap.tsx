@@ -12,6 +12,14 @@ config.apiKey = import.meta.env.VITE_MAPTILER_API_KEY
 const LOCATE_ZOOM = 15
 
 /**
+ * Fallback map center (杭州西湖 / West Lake) used when geolocation is denied or
+ * unavailable. Kept in sync with the mock world's fallback anchor so the seeded
+ * sightings are in view even without a real location fix.
+ */
+const HANGZHOU_CENTER: [number, number] = [120.1551, 30.2741]
+const HANGZHOU_ZOOM = 12
+
+/**
  * The live MapTiler `Map`, shared with client-only children (e.g. the sightings
  * marker layer). `null` until the map has loaded.
  */
@@ -85,7 +93,7 @@ export default function MapTilerMap({ children }: { children?: ReactNode }) {
               center: [position.coords.longitude, position.coords.latitude] as [number, number],
               zoom: LOCATE_ZOOM,
             }
-          : {}),
+          : { center: HANGZHOU_CENTER, zoom: HANGZHOU_ZOOM }),
       })
       mapRef.current = mapInstance
 

@@ -4,12 +4,19 @@
 import { BLOOM_STAGES } from './types'
 import type {
   Api,
+  BloomStage,
   CreatePostPayload,
   CreatePostResult,
+  Place,
+  PlacePostsQuery,
+  PlaceSummary,
+  Post,
+  PostDetail,
   RecognitionCandidate,
   Sighting,
   SightingsQuery,
   Species,
+  TimeSource,
 } from './types'
 
 const MOCK_SPECIES: Species[] = [
@@ -71,13 +78,16 @@ function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-// --- Deterministic sightings mock -----------------------------------------
-// Sightings are generated from a (speciesId, date) seed so the same query
-// always yields the same map, and so the two design states are reproducible:
-// 紫花鼠尾草 today -> 18 sightings (with a tight cluster + one photo), and
-// 紫花鼠尾草 5 days ago -> empty. Everything is centered on 巴黎一区.
+// --- Seeded world: fixed places + deterministic posts ---------------------
+// A small set of Places is anchored near the user's initial map center; each
+// place's posts are generated deterministically from (placeId, speciesId, date)
+// so ids stay stable for a session and the panel / waterfall / detail pages all
+// read one source of truth. `listSightings` is the map projection of these
+// posts. Design-locked states are preserved: 紫花鼠尾草 today is busy and
+// 紫花鼠尾草 5 天前 is empty. Falls back to 杭州西湖 before any map anchor exists.
 
-const PARIS_CENTER: [number, number] = [2.3388, 48.8606]
+// 杭州西湖 (West Lake), used as the anchor when no map viewport is available yet.
+const HANGZHOU_CENTER: [number, number] = [120.1551, 30.2741]
 const MS_PER_DAY = 86_400_000
 
 /** FNV-1a string hash -> 32-bit unsigned int, for seeding the PRNG. */
@@ -112,85 +122,191 @@ function daysBackFromToday(date: string): number {
   return Math.round((today - picked) / MS_PER_DAY)
 }
 
-/** How many sightings a (species, day) pair should have. */
-function sightingCount(
-  speciesId: string | undefined,
+/** Fixed place definitions (name/area/sensitivity independent of the anchor). */
+interface PlaceDef {
+  id: string
+  parkName: string
+  areaName: string
+  sensitive?: boolean
+}
+
+const PLACE_DEFS: PlaceDef[] = [
+  { id: 'place-wutong-lake', parkName: '梧桐公园', areaName: '湖畔入口' },
+  { id: 'place-wutong-east', parkName: '梧桐公园', areaName: '东侧花带', sensitive: true },
+  { id: 'place-yunxi-valley', parkName: '云溪谷', areaName: '樱花坡' },
+  { id: 'place-binhe-greenway', parkName: '滨河绿道', areaName: '三号驿站' },
+  { id: 'place-gushan-garden', parkName: '孤山植物园', areaName: '银杏道' },
+]
+
+/** Short captions rotated through posts (empty entries leave 正文 blank). */
+const CAPTION_POOL = [
+  '整片开得正好，光线柔和。',
+  '今早路过拍的，人不多。',
+  '花色偏淡，含苞的还挺多。',
+  '风一吹落了一地，别有味道。',
+  '',
+  '',
+]
+
+/** Deterministic coordinate for the nth place, spread ~0.4–1.3km around the anchor. */
+function placeCoords(anchor: [number, number], index: number): [number, number] {
+  const rand = mulberry32(hashSeed(`place-offset:${index}`))
+  const angle = rand() * Math.PI * 2
+  const radius = 0.004 + rand() * 0.008
+  return [anchor[0] + Math.cos(angle) * radius, anchor[1] + Math.sin(angle) * radius]
+}
+
+function anchorFromBbox(bbox?: [number, number, number, number]): [number, number] {
+  if (!bbox) return HANGZHOU_CENTER
+  return [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2]
+}
+
+// Session singleton: built once from the first available anchor so place ids and
+// coords stay put for the session. Deep-linking before the map exists rebuilds
+// from the default anchor — best-effort, not persisted.
+let world: { places: Place[] } | null = null
+
+function getWorld(bbox?: [number, number, number, number]): { places: Place[] } {
+  if (world) return world
+  const anchor = anchorFromBbox(bbox)
+  world = {
+    places: PLACE_DEFS.map((def, i) => ({
+      id: def.id,
+      parkName: def.parkName,
+      areaName: def.areaName,
+      sensitive: def.sensitive,
+      coords: placeCoords(anchor, i),
+    })),
+  }
+  return world
+}
+
+function findPlace(placeId: string, bbox?: [number, number, number, number]): Place | undefined {
+  return getWorld(bbox).places.find(p => p.id === placeId)
+}
+
+function withinBbox(coords: [number, number], bbox: [number, number, number, number]): boolean {
+  const [w, s, e, n] = bbox
+  return coords[0] >= w && coords[0] <= e && coords[1] >= s && coords[1] <= n
+}
+
+/** How many posts a (place, species, day) triple should have. */
+function postCountFor(
+  placeId: string,
+  speciesId: string,
   daysBack: number,
   rand: () => number,
 ): number {
-  // Overview (no species filter): a light sample across the region.
-  if (!speciesId) return 6
-  // Design-locked states for the demo species.
+  // Design-locked demo: 紫花鼠尾草 busy today, empty 5 天前.
   if (speciesId === 'salvia-nemorosa') {
-    if (daysBack === 0) return 18
+    if (daysBack === 0) return placeId === 'place-wutong-lake' ? 6 : 2 + Math.floor(rand() * 3)
     if (daysBack === 5) return 0
   }
-  // Otherwise a deterministic small set; some days land empty.
   const r = rand()
-  return r < 0.2 ? 0 : 3 + Math.floor(r * 12)
+  return r < 0.55 ? 0 : 1 + Math.floor(r * 4)
 }
 
+/**
+ * Deterministic posts for a place on a given day, across all species, sorted by
+ * capture time descending (newest first) — the waterfall order.
+ */
+function buildPostsForPlaceDay(placeId: string, date: string): Post[] {
+  const daysBack = daysBackFromToday(date)
+  if (daysBack < 0) return []
+
+  const [y, m, d] = date.split('-').map(Number)
+  const posts: Post[] = []
+  for (const sp of MOCK_SPECIES) {
+    const rand = mulberry32(hashSeed(`posts:${placeId}:${sp.id}:${date}`))
+    const count = postCountFor(placeId, sp.id, daysBack, rand)
+    for (let i = 0; i < count; i++) {
+      const hour = 7 + Math.floor(rand() * 11) // 07:00–17:59
+      const minute = Math.floor(rand() * 60)
+      const captured = new Date(y, m - 1, d, hour, minute)
+      const published = new Date(captured.getTime() + (5 + Math.floor(rand() * 120)) * 60_000)
+      const stage: BloomStage = BLOOM_STAGES[Math.floor(rand() * BLOOM_STAGES.length)]
+      const timeSource: TimeSource = rand() < 0.75 ? 'onsite' : 'album'
+      const caption = CAPTION_POOL[Math.floor(rand() * CAPTION_POOL.length)]
+      posts.push({
+        id: `${placeId}__${date}__${sp.id}__${i}`,
+        placeId,
+        speciesId: sp.id,
+        bloomStage: stage,
+        capturedAt: captured.toISOString(),
+        publishedAt: published.toISOString(),
+        timeSource,
+        ...(caption ? { description: caption } : {}),
+      })
+    }
+  }
+  posts.sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))
+  return posts
+}
+
+/** Map projection of the world's posts for (species, day), filtered to the viewport. */
 function buildSightings(params: SightingsQuery): Sighting[] {
   const { speciesId, date, bbox } = params
-  const daysBack = daysBackFromToday(date)
-
-  // Count depends only on (species, day) so the design states hold everywhere:
-  // 紫花鼠尾草 today -> 18, 5天前 -> 0, regardless of where the map is.
-  const countRand = mulberry32(hashSeed(`count:${speciesId ?? 'all'}:${date}`))
-  const count = sightingCount(speciesId, daysBack, countRand)
-  if (count === 0) return []
-
-  // Positions are scattered inside the current viewport (fallback: a small box
-  // around Paris pre-load), seeded by (species, day, coarse bbox) so they stay
-  // put per view but refresh when the user moves to a genuinely new area.
-  const view: [number, number, number, number] = bbox ?? [
-    PARIS_CENTER[0] - 0.015,
-    PARIS_CENTER[1] - 0.015,
-    PARIS_CENTER[0] + 0.015,
-    PARIS_CENTER[1] + 0.015,
-  ]
-  const [w, s, e, n] = view
-  const spanX = e - w
-  const spanY = n - s
-  const posRand = mulberry32(
-    hashSeed(`${speciesId ?? 'all'}:${date}:${view.map(v => v.toFixed(2)).join(',')}`),
-  )
-
-  // Draw a point inset from the viewport edges so nothing sits on the border.
-  const INSET = 0.15
-  const px = () => w + spanX * (INSET + posRand() * (1 - 2 * INSET))
-  const py = () => s + spanY * (INSET + posRand() * (1 - 2 * INSET))
-
-  // ~2/3 of the points collapse into a tight cluster (yields the "12"-style
-  // bubble once the map projects them into one pixel cell); the rest scatter.
-  const clusterSize = count >= 6 ? Math.round(count * 0.66) : 0
-  const clusterAnchor: [number, number] = [px(), py()]
-  const capturedAt = new Date(Date.now() - Math.max(0, daysBack) * MS_PER_DAY).toISOString()
-  const speciesPool = speciesId ? [speciesId] : MOCK_SPECIES.map(sp => sp.id)
+  if (daysBackFromToday(date) < 0) return []
 
   const sightings: Sighting[] = []
-  for (let i = 0; i < count; i++) {
-    const inCluster = i < clusterSize
-    const coords: [number, number] = inCluster
-      ? [
-          clusterAnchor[0] + (posRand() - 0.5) * spanX * 0.02,
-          clusterAnchor[1] + (posRand() - 0.5) * spanY * 0.02,
-        ]
-      : [px(), py()]
-    const sid = speciesPool[Math.floor(posRand() * speciesPool.length)]
-    sightings.push({
-      id: `${sid}-${date}-${i}`,
-      speciesId: sid,
-      coords,
-      bloomStage: BLOOM_STAGES[Math.floor(posRand() * BLOOM_STAGES.length)],
-      capturedAt,
-      // Give a couple of scattered points a photo for the thumbnail marker.
-      ...(!inCluster && posRand() < 0.35
-        ? { thumbnailUrl: `https://picsum.photos/seed/${sid}-${i}/96` }
-        : {}),
-    })
+  for (const place of getWorld(bbox).places) {
+    if (bbox && !withinBbox(place.coords, bbox)) continue
+    const posts = buildPostsForPlaceDay(place.id, date)
+    const matched = speciesId ? posts.filter(p => p.speciesId === speciesId) : posts
+    for (const post of matched) {
+      // Tiny deterministic jitter so a place reads as one pixel cluster.
+      const jr = mulberry32(hashSeed(`jit:${post.id}`))
+      const coords: [number, number] = [
+        place.coords[0] + (jr() - 0.5) * 0.0006,
+        place.coords[1] + (jr() - 0.5) * 0.0006,
+      ]
+      sightings.push({
+        id: post.id,
+        speciesId: post.speciesId,
+        coords,
+        bloomStage: post.bloomStage,
+        capturedAt: post.capturedAt,
+        placeId: place.id,
+        // Keep the map's photo-bubble path alive for occasional standalone points.
+        ...(jr() < 0.35 ? { thumbnailUrl: `https://picsum.photos/seed/${post.id}/96` } : {}),
+      })
+    }
   }
   return sightings
+}
+
+/** Build a PlaceSummary for the panel from (place, day, species) posts. */
+function buildPlaceSummary(params: PlacePostsQuery): PlaceSummary {
+  const { placeId, date, speciesId, bbox } = params
+  const place = findPlace(placeId, bbox)
+  if (!place) throw new Error(`Unknown place: ${placeId}`)
+
+  const all = buildPostsForPlaceDay(placeId, date)
+  const matched = speciesId ? all.filter(p => p.speciesId === speciesId) : all
+
+  // Headline species: the selected one, else the most-posted species that day.
+  let headlineSpeciesId = speciesId
+  if (!headlineSpeciesId) {
+    const counts = new Map<string, number>()
+    for (const p of matched) counts.set(p.speciesId, (counts.get(p.speciesId) ?? 0) + 1)
+    headlineSpeciesId = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0]
+  }
+  const headlinePost = headlineSpeciesId
+    ? matched.find(p => p.speciesId === headlineSpeciesId)
+    : matched[0]
+  const species =
+    MOCK_SPECIES.find(s => s.id === (headlinePost?.speciesId ?? headlineSpeciesId)) ?? MOCK_SPECIES[0]
+
+  return {
+    place,
+    headline: {
+      species,
+      bloomStage: headlinePost?.bloomStage ?? '满开',
+      capturedAt: headlinePost?.capturedAt ?? new Date(`${date}T09:00:00`).toISOString(),
+    },
+    recentPosts: matched.slice(0, 4),
+    count: matched.length,
+  }
 }
 
 export const mockApi: Api = {
@@ -216,5 +332,28 @@ export const mockApi: Api = {
   async listSightings(params: SightingsQuery): Promise<Sighting[]> {
     await delay(400)
     return buildSightings(params)
+  },
+
+  async getPlaceSummary(params: PlacePostsQuery): Promise<PlaceSummary> {
+    await delay(300)
+    return buildPlaceSummary(params)
+  },
+
+  async listPlacePosts(params: PlacePostsQuery): Promise<Post[]> {
+    await delay(350)
+    getWorld(params.bbox) // ensure the world exists for a deep-linked route
+    const posts = buildPostsForPlaceDay(params.placeId, params.date)
+    return params.speciesId ? posts.filter(p => p.speciesId === params.speciesId) : posts
+  },
+
+  async getPost(postId: string): Promise<PostDetail> {
+    await delay(300)
+    const [placeId, date] = postId.split('__')
+    if (!placeId || !date) throw new Error(`Malformed post id: ${postId}`)
+    const post = buildPostsForPlaceDay(placeId, date).find(p => p.id === postId)
+    const place = findPlace(placeId)
+    const species = MOCK_SPECIES.find(s => s.id === post?.speciesId)
+    if (!post || !place || !species) throw new Error(`Post not found: ${postId}`)
+    return { ...post, place, species }
   },
 }

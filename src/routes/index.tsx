@@ -13,6 +13,7 @@ import { queryOpenAtom, selectedSpeciesAtom } from '#/features/species/state'
 const MapTilerMap = lazy(() => import('#/components/MapTilerMap'))
 const SpeciesQuery = lazy(() => import('#/features/species/SpeciesQuery'))
 const SightingsMarkers = lazy(() => import('#/features/sightings/SightingsMarkers'))
+const PlacePanel = lazy(() => import('#/features/places/PlacePanel'))
 
 export const Route = createFileRoute('/')({ component: Home })
 
@@ -153,6 +154,11 @@ function Home() {
           <SpeciesQuery />
         </Suspense>
       )}
+      <ClientOnly fallback={null}>
+        <Suspense fallback={null}>
+          <PlacePanel />
+        </Suspense>
+      </ClientOnly>
       <AuthOverlay />
     </div>
   )
