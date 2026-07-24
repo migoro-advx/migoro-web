@@ -68,16 +68,19 @@ function PlaceWaterfall() {
         </p>
 
         {isLoading ? (
-          <p className="mt-8 text-sm text-muted">加载中…</p>
+          <p className="t-shimmer mt-8 text-sm" data-text="加载中…">
+            加载中…
+          </p>
         ) : !posts || posts.length === 0 ? (
           <p className="mt-8 text-sm text-muted">这一天暂时没有实况。</p>
         ) : (
           <div className="mt-6 grid grid-cols-2 gap-4">
-            {posts.map(post => (
+            {posts.map((post, i) => (
               <PostCard
                 key={post.id}
                 post={post}
                 speciesName={nameFor(post.speciesId)}
+                index={i}
                 onOpen={() => navigate({ to: '/post/$postId', params: { postId: post.id } })}
               />
             ))}

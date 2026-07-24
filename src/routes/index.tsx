@@ -105,14 +105,14 @@ function Home() {
               <button
                 type="button"
                 onClick={() => setSpecies(null)}
-                className="text-sm font-medium text-accent"
+                className="t-fade-in text-sm font-medium text-accent"
               >
                 清除
               </button>
             )}
           </div>
           {placeName && (
-            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs text-ink shadow-md ring-1 ring-black/5">
+            <div className="t-pop-in mt-2 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs text-ink shadow-md ring-1 ring-black/5">
               <PinIcon />
               {placeName}
             </div>
@@ -127,7 +127,7 @@ function Home() {
           className="pointer-events-none fixed inset-x-0 z-30 px-6"
           style={{ bottom: `calc(${NAV_OFFSET} + ${DIAL_REVEAL} + 1.5rem)` }}
         >
-          <div className="mx-auto flex w-full max-w-md items-center gap-3 rounded-3xl bg-peach px-6 py-5 shadow-[0_10px_30px_rgba(214,138,95,.2)]">
+          <div className="t-rise-in mx-auto flex w-full max-w-md items-center gap-3 rounded-3xl bg-peach px-6 py-5 shadow-[0_10px_30px_rgba(214,138,95,.2)]">
             <div className="min-w-0 flex-1">
               <p className="text-base font-semibold text-ink">
                 这一天暂时没有「{selectedSpecies.commonName}」实况。

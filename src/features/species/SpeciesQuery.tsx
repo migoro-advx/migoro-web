@@ -56,7 +56,7 @@ export default function SpeciesQuery() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-white">
+    <div className="t-panel-in fixed inset-0 z-50 flex flex-col overflow-y-auto bg-white">
       <div
         className="mx-auto w-full max-w-md px-6 pt-[calc(env(safe-area-inset-top)+1rem)]"
         style={{ paddingBottom: `calc(${NAV_OFFSET} + 2rem)` }}
@@ -86,7 +86,9 @@ export default function SpeciesQuery() {
         </div>
 
         {isLoading ? (
-          <p className="mt-8 text-sm text-muted">加载中…</p>
+          <p className="t-shimmer mt-8 text-sm" data-text="加载中…">
+            加载中…
+          </p>
         ) : error ? (
           <p className="mt-8 text-sm text-muted">加载失败，请稍后再试。</p>
         ) : (
@@ -112,8 +114,8 @@ export default function SpeciesQuery() {
               <section className="mt-7">
                 <h2 className="text-lg font-bold text-ink">其他花卉</h2>
                 <div className="mt-3 flex flex-col gap-3">
-                  {others.map(s => (
-                    <OtherRow key={s.id} species={s} onPick={pick} />
+                  {others.map((s, i) => (
+                    <OtherRow key={s.id} species={s} index={i} onPick={pick} />
                   ))}
                 </div>
               </section>
@@ -160,13 +162,14 @@ function SeasonCard({
     transform: `rotate(${rotate}deg) translateY(${raised ? -10 : 8}px)`,
     zIndex: raised ? 20 : 10,
     marginLeft: index === 0 ? 0 : -12,
-  }
+    '--i': index,
+  } as React.CSSProperties
   return (
     <button
       type="button"
       onClick={() => onPick(species)}
       style={style}
-      className="flex w-[34%] flex-col rounded-3xl bg-white p-2 text-left shadow-[0_8px_24px_rgba(214,138,95,.18)] ring-1 ring-black/5"
+      className="t-stagger-item flex w-[34%] flex-col rounded-3xl bg-white p-2 text-left shadow-[0_8px_24px_rgba(214,138,95,.18)] ring-1 ring-black/5 transition-transform duration-150 active:scale-95"
     >
       <span className="flex w-full items-center justify-center">
         <SpeciesFlower index={index} className="w-full block" />
@@ -179,13 +182,27 @@ function SeasonCard({
   )
 }
 
-function OtherRow({ species, onPick }: { species: Species; onPick: (s: Species) => void }) {
+function OtherRow({
+  species,
+  index,
+  onPick,
+}: {
+  species: Species
+  index: number
+  onPick: (s: Species) => void
+}) {
   return (
     <button
       type="button"
       onClick={() => onPick(species)}
-      style={{ backgroundColor: species.accentColor ?? FALLBACK_ACCENT }}
-      className="flex items-center justify-between rounded-full px-5 py-4 text-left"
+      // Cap the stagger index so the total delay stays under ~320ms.
+      style={
+        {
+          backgroundColor: species.accentColor ?? FALLBACK_ACCENT,
+          '--i': Math.min(index, 8),
+        } as React.CSSProperties
+      }
+      className="t-stagger-item flex items-center justify-between rounded-full px-5 py-4 text-left transition-transform duration-150 active:scale-95"
     >
       <span className="text-sm font-medium text-ink">
         {species.commonName}

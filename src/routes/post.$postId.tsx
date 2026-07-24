@@ -61,23 +61,34 @@ function PostDetail() {
           // The public endpoint 404s for hidden/deleted posts reached from /me.
           <p className="mt-8 text-sm text-muted">帖子不存在或已删除。</p>
         ) : isLoading || !post ? (
-          <p className="mt-8 text-sm text-muted">加载中…</p>
+          <p className="t-shimmer mt-8 text-sm" data-text="加载中…">
+            加载中…
+          </p>
         ) : (
           <>
-            {/* Hero — the post photo over a brand placeholder background. */}
-            <div className="mt-3 aspect-[4/5] w-full overflow-hidden rounded-3xl bg-celadon">
+            {/* Hero — the post photo over a brand placeholder background.
+                The three content blocks stagger in with doubled indices,
+                i.e. an 80ms beat between blocks (large blocks, large gap). */}
+            <div
+              className="t-stagger-item mt-3 aspect-[4/5] w-full overflow-hidden rounded-3xl bg-celadon"
+              style={{ '--i': 0 } as React.CSSProperties}
+            >
               {post.imageUrl && (
                 <img
                   src={post.imageUrl}
                   alt={post.species.commonName}
-                  className="h-full w-full object-cover"
+                  className="t-img-reveal h-full w-full object-cover"
+                  onLoad={e => e.currentTarget.classList.add('is-loaded')}
                   onError={e => (e.currentTarget.style.display = 'none')}
                 />
               )}
             </div>
 
             {/* Species card — name + status, solid stage pill on the right. */}
-            <div className="mt-5 flex items-center gap-3 rounded-3xl bg-white px-5 py-4 shadow-[0_8px_24px_rgba(0,0,0,.08)] ring-1 ring-black/5">
+            <div
+              className="t-stagger-item mt-5 flex items-center gap-3 rounded-3xl bg-white px-5 py-4 shadow-[0_8px_24px_rgba(0,0,0,.08)] ring-1 ring-black/5"
+              style={{ '--i': 2 } as React.CSSProperties}
+            >
               <div className="min-w-0 flex-1">
                 <h2 className="truncate text-xl font-bold text-ink">{post.species.commonName}</h2>
                 <p className="mt-0.5 text-sm text-muted">
@@ -90,7 +101,10 @@ function PostDetail() {
             </div>
 
             {/* 实况记录 — trust metadata as label/value rows. */}
-            <div className="mt-4 rounded-3xl bg-peach px-5 py-5">
+            <div
+              className="t-stagger-item mt-4 rounded-3xl bg-peach px-5 py-5"
+              style={{ '--i': 4 } as React.CSSProperties}
+            >
               <h3 className="text-base font-bold text-ink">实况记录</h3>
               <dl className="mt-3 space-y-3">
                 <RecordRow label="拍摄于" value={fullDate(new Date(post.capturedAt))} />

@@ -64,7 +64,7 @@ export default function DetailStep() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex h-full flex-col bg-white">
+    <form onSubmit={handleSubmit} className="t-slide-in flex h-full flex-col bg-white">
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 pt-[calc(env(safe-area-inset-top)+1rem)] pb-4">
         <h1 className="text-3xl font-bold text-ink">发布实况</h1>
 
@@ -113,8 +113,8 @@ export default function DetailStep() {
                 }
                 className={
                   form.bloomStage === stage
-                    ? 'rounded-full bg-accent px-4 py-2 text-sm text-white'
-                    : 'rounded-full bg-ink/5 px-4 py-2 text-sm text-ink'
+                    ? 'rounded-full bg-accent px-4 py-2 text-sm text-white transition-colors duration-150'
+                    : 'rounded-full bg-ink/5 px-4 py-2 text-sm text-ink transition-colors duration-150'
                 }
               >
                 {stage}
@@ -156,7 +156,9 @@ export default function DetailStep() {
         </label>
 
         {submitState.status === 'error' && (
-          <p className="text-sm text-red-600">{submitState.message}</p>
+          // Mounted on failure, unmounted while a retry is pending — so the
+          // shake replays on every failed submit without reflow tricks.
+          <p className="t-shake-in text-sm text-red-600">{submitState.message}</p>
         )}
       </div>
 
@@ -165,7 +167,7 @@ export default function DetailStep() {
         <button
           type="submit"
           disabled={submitting || !confirmed}
-          className="mx-auto rounded-full bg-ink px-16 py-3 text-sm text-white disabled:opacity-40"
+          className="mx-auto rounded-full bg-ink px-16 py-3 text-sm text-white transition duration-150 active:scale-95 disabled:opacity-40"
         >
           {submitting ? '发布中…' : '发布实况'}
         </button>

@@ -12,17 +12,27 @@ export default function PostCard({
   post,
   speciesName,
   statusLine,
+  index,
   onOpen,
 }: {
   post: Post
   speciesName: string
   /** Optional third text row, e.g. 「已发布 · 梧桐公园」 on the profile page. */
   statusLine?: ReactNode
+  /** Grid position driving the staggered entrance (capped at 8 internally). */
+  index?: number
   onOpen: () => void
 }) {
   const captured = new Date(post.capturedAt)
   return (
-    <button type="button" onClick={onOpen} className="flex flex-col text-left">
+    <button
+      type="button"
+      onClick={onOpen}
+      style={index != null ? ({ '--i': Math.min(index, 8) } as React.CSSProperties) : undefined}
+      className={`flex flex-col text-left transition-transform duration-150 active:scale-[0.98] ${
+        index != null ? 't-stagger-item' : ''
+      }`}
+    >
       <div className="overflow-hidden rounded-3xl bg-white shadow-[0_8px_24px_rgba(0,0,0,.08)] ring-1 ring-black/5">
         {/* Bloom-stage color strip + photo over the brand placeholder. */}
         <div
@@ -35,7 +45,8 @@ export default function PostCard({
               src={post.imageUrl}
               alt={speciesName}
               loading="lazy"
-              className="h-full w-full object-cover"
+              className="t-img-reveal h-full w-full object-cover"
+              onLoad={e => e.currentTarget.classList.add('is-loaded')}
               onError={e => (e.currentTarget.style.display = 'none')}
             />
           )}

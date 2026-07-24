@@ -92,17 +92,20 @@ function MyPosts() {
         )}
 
         {isLoading || !posts ? (
-          <p className="mt-8 text-sm text-muted">加载中…</p>
+          <p className="t-shimmer mt-8 text-sm" data-text="加载中…">
+            加载中…
+          </p>
         ) : posts.length === 0 ? (
           <p className="mt-8 text-sm text-muted">还没有发布过实况。</p>
         ) : (
           <div className="mt-4 grid grid-cols-2 gap-4">
-            {visible!.map(post => (
+            {visible!.map((post, i) => (
               <PostCard
                 key={post.id}
                 post={post}
                 speciesName={nameFor(post.speciesId)}
                 statusLine={<StatusLine post={post} />}
+                index={i}
                 onOpen={() => navigate({ to: '/post/$postId', params: { postId: post.id } })}
               />
             ))}
@@ -128,7 +131,7 @@ function FilterChip({
     <button
       type="button"
       onClick={onSelect}
-      className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium ${
+      className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors duration-150 ${
         active ? 'bg-ink text-white' : 'bg-stone-100 text-ink'
       }`}
     >

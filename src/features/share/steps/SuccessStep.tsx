@@ -48,26 +48,54 @@ export default function SuccessStep({ onClose }: { onClose: () => void }) {
   return (
     <div className="flex h-full flex-col overflow-y-auto bg-white px-5 pt-[calc(env(safe-area-inset-top)+2rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)] justify-end mb-10">
       {/* Avatar with flower mark. */}
-      <span className="block h-20 w-20 rounded-full bg-peach">
+      <span
+        className="t-stagger-item block h-20 w-20 rounded-full bg-peach"
+        style={{ '--i': 0 } as React.CSSProperties}
+      >
         <BloomMark className="block scale-140 mt-[-15%] ml-[10%]" />
       </span>
 
-      {/* Orange success check. */}
-      <span className="my-8 text-2xl text-accent" aria-hidden>
+      {/* Orange success check — stroke-draw celebration (10-success-check).
+          The step mounts fresh, so data-state="in" plays the appear on mount.
+          --i slots it into the same stagger timeline as its siblings.
+          Path length ≈ 30.4 → stroke-dasharray 31 in styles.css. */}
+      <span
+        className="t-success-check my-8 text-accent"
+        data-state="in"
+        style={{ '--i': 1 } as React.CSSProperties}
+        aria-hidden
+      >
         <svg width="25" height="19" viewBox="0 0 25 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M0 9.76776L2.87358 6.85795L8.7294 12.6172L21.3949 0L24.2926 2.9098L8.7294 18.4126L0 9.76776Z" fill="currentColor"/>
+          <path
+            d="M2 10l7 7L23 2"
+            stroke="currentColor"
+            strokeWidth="3.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       </span>
 
-      <h1 className="mt-3 text-3xl font-bold text-ink">实况发布成功</h1>
+      <h1
+        className="t-stagger-item mt-3 text-3xl font-bold text-ink"
+        style={{ '--i': 2 } as React.CSSProperties}
+      >
+        实况发布成功
+      </h1>
       {capture && (
-        <p className="mt-2 text-sm text-muted">
+        <p
+          className="t-stagger-item mt-2 text-sm text-muted"
+          style={{ '--i': 3 } as React.CSSProperties}
+        >
           已加入 {formatMonthDay(capture.meta.capturedAt)} 的地图实况
         </p>
       )}
 
       {/* Result card. */}
-      <div className="mt-6 flex items-center gap-4 rounded-3xl bg-white p-4 shadow-[0_2px_20px_rgba(0,0,0,0.06)] ring-1 ring-black/5">
+      <div
+        className="t-stagger-item mt-6 flex items-center gap-4 rounded-3xl bg-white p-4 shadow-[0_2px_20px_rgba(0,0,0,0.06)] ring-1 ring-black/5"
+        style={{ '--i': 4 } as React.CSSProperties}
+      >
         <span className="h-28 w-24 shrink-0 overflow-hidden rounded-2xl bg-celadon">
           {capture && (
             <img src={capture.dataUrl} alt="所拍照片" className="h-full w-full object-cover" />
@@ -86,25 +114,28 @@ export default function SuccessStep({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* Next actions. */}
-      <div className="mt-6 flex flex-col gap-3">
+      <div
+        className="t-stagger-item mt-6 flex flex-col gap-3"
+        style={{ '--i': 6 } as React.CSSProperties}
+      >
         <button
           type="button"
           onClick={onClose}
-          className="w-full rounded-full bg-ink px-6 py-3 text-sm text-white"
+          className="w-full rounded-full bg-ink px-6 py-3 text-sm text-white transition-transform duration-150 active:scale-95"
         >
           查看地图
         </button>
         <button
           type="button"
           onClick={viewPost}
-          className="w-full rounded-full bg-ink/5 px-6 py-3 text-sm text-ink"
+          className="w-full rounded-full bg-ink/5 px-6 py-3 text-sm text-ink transition-transform duration-150 active:scale-95"
         >
           查看帖子
         </button>
         <button
           type="button"
           onClick={() => resetShare()}
-          className="w-full rounded-full bg-ink/5 px-6 py-3 text-sm text-ink"
+          className="w-full rounded-full bg-ink/5 px-6 py-3 text-sm text-ink transition-transform duration-150 active:scale-95"
         >
           继续拍摄
         </button>

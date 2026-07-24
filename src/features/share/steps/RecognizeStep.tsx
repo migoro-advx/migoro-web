@@ -30,7 +30,7 @@ export default function RecognizeStep() {
   }
 
   return (
-    <div className="flex h-full flex-col bg-white">
+    <div className="t-slide-in flex h-full flex-col bg-white">
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-[calc(env(safe-area-inset-top)+1rem)] pb-4">
         <h1 className="text-3xl font-bold text-ink">确认物种</h1>
         <p className="mt-1 text-sm text-muted">AI只提供候选，需要你亲自确认</p>
@@ -42,7 +42,11 @@ export default function RecognizeStep() {
           )}
         </div>
 
-        {isLoading && <p className="mt-6 text-sm text-muted">识别中…</p>}
+        {isLoading && (
+          <p className="t-shimmer mt-6 text-sm" data-text="识别中…">
+            识别中…
+          </p>
+        )}
 
         {error && (
           <div className="mt-6 text-sm text-ink">
@@ -66,7 +70,7 @@ export default function RecognizeStep() {
               <button
                 type="button"
                 onClick={() => proceed(chosen ?? null)}
-                className="shrink-0 rounded-2xl bg-accent py-2 text-sm text-white block w-18"
+                className="shrink-0 rounded-2xl bg-accent py-2 text-sm text-white block w-18 transition-transform duration-150 active:scale-95"
               >
                 确认
               </button>
@@ -113,14 +117,14 @@ export default function RecognizeStep() {
         <button
           type="button"
           onClick={() => setStep('capture')}
-          className="col-span-1 w-full rounded-full bg-ink/5 py-3.5 text-sm text-ink"
+          className="col-span-1 w-full rounded-full bg-ink/5 py-3.5 text-sm text-ink transition-transform duration-150 active:scale-95"
         >
           重拍
         </button>
         <button
           type="button"
           onClick={() => proceed(chosen ?? null)}
-          className="col-span-1 w-full rounded-full bg-ink py-3.5 text-sm text-white"
+          className="col-span-1 w-full rounded-full bg-ink py-3.5 text-sm text-white transition-transform duration-150 active:scale-95"
         >
           继续
         </button>

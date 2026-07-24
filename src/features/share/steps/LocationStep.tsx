@@ -53,7 +53,7 @@ export default function LocationStep() {
   }
 
   return (
-    <div className="flex h-full flex-col bg-white">
+    <div className="t-slide-in flex h-full flex-col bg-white">
       <div className="px-5 pt-[calc(env(safe-area-inset-top)+1rem)]">
         <h1 className="text-3xl font-bold text-ink">确认拍摄位置</h1>
         <p className="mt-1 text-sm text-muted">请修正到入口、区段或观赏区域</p>
@@ -121,7 +121,7 @@ export default function LocationStep() {
         <button
           type="button"
           onClick={() => setStep('detail')}
-          className="w-full rounded-full bg-ink px-8 py-3 text-sm text-white"
+          className="w-full rounded-full bg-ink px-8 py-3 text-sm text-white transition-transform duration-150 active:scale-95"
         >
           确认位置
         </button>

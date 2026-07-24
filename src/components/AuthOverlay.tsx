@@ -7,14 +7,14 @@ export function AuthOverlay() {
     <>
       <Show when="signed-out">
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="flex w-full flex-col items-center gap-6 bg-white/95 px-6 py-8 text-center shadow-2xl ring-1 ring-black/5">
+          <div className="t-modal-in flex w-full flex-col items-center gap-6 bg-white/95 px-6 py-8 text-center shadow-2xl ring-1 ring-black/5">
             <BrandLogo className="h-16 w-16" />
             <h1 className="text-3xl font-semibold tracking-wide text-gray-900">{BRAND_NAME}</h1>
             <div className="flex w-full flex-col gap-3">
               <SignUpButton mode="modal">
                 <button
                   type="button"
-                  className="w-full rounded-full border border-gray-300 bg-white px-4 py-2.5 font-medium text-gray-900 transition-colors hover:bg-gray-50"
+                  className="w-full rounded-full border border-gray-300 bg-white px-4 py-2.5 font-medium text-gray-900 transition duration-150 hover:bg-gray-50 active:scale-95"
                 >
                   创建账户
                 </button>
@@ -22,7 +22,7 @@ export function AuthOverlay() {
               <SignInButton mode="modal">
                 <button
                   type="button"
-                  className="w-full rounded-full bg-blue-600 px-4 py-2.5 font-medium text-white transition-colors hover:bg-blue-700"
+                  className="w-full rounded-full bg-blue-600 px-4 py-2.5 font-medium text-white transition duration-150 hover:bg-blue-700 active:scale-95"
                 >
                   登录
                 </button>

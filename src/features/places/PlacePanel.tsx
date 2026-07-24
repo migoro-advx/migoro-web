@@ -61,7 +61,7 @@ export default function PlacePanel() {
       className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-4"
       style={{ paddingBottom: `calc(${NAV_FAB_CLEARANCE} + 0.5rem)` }}
     >
-      <div className="pointer-events-auto mx-auto w-full max-w-md rounded-3xl bg-white px-5 pt-3 pb-5 shadow-[0_-8px_30px_rgba(0,0,0,.12)] ring-1 ring-black/5">
+      <div className="t-rise-in pointer-events-auto mx-auto w-full max-w-md rounded-3xl bg-white px-5 pt-3 pb-5 shadow-[0_-8px_30px_rgba(0,0,0,.12)] ring-1 ring-black/5">
         {/* Grabber — tap to dismiss the sheet. */}
         <button
           type="button"
@@ -71,7 +71,11 @@ export default function PlacePanel() {
         />
 
         {isLoading || !place || !headline ? (
-          <p className="py-6 text-center text-sm text-muted">加载中…</p>
+          <p className="py-6 text-center text-sm">
+            <span className="t-shimmer" data-text="加载中…">
+              加载中…
+            </span>
+          </p>
         ) : (
           <>
             <div className="flex items-start justify-between gap-3">
@@ -95,13 +99,19 @@ export default function PlacePanel() {
               {Array.from({ length: thumbCount }).map((_, i) => {
                 const thumb = data.recentPosts.at(i)
                 return (
-                  <div key={i} className="aspect-square overflow-hidden rounded-2xl bg-celadon">
+                  <div
+                    key={i}
+                    className={`aspect-square overflow-hidden rounded-2xl bg-celadon ${
+                      thumb?.imageUrl ? '' : 't-skel-pulse'
+                    }`}
+                  >
                     {thumb?.imageUrl && (
                       <img
                         src={thumb.imageUrl}
                         alt=""
                         loading="lazy"
-                        className="h-full w-full object-cover"
+                        className="t-img-reveal h-full w-full object-cover"
+                        onLoad={e => e.currentTarget.classList.add('is-loaded')}
                         onError={e => (e.currentTarget.style.display = 'none')}
                       />
                     )}
@@ -126,7 +136,7 @@ export default function PlacePanel() {
                   search: { date, ...(speciesId ? { species: speciesId } : {}) },
                 })
               }
-              className="mt-5 flex w-full items-center justify-center rounded-full bg-ink py-4 text-sm font-semibold text-white"
+              className="mt-5 flex w-full items-center justify-center rounded-full bg-ink py-4 text-sm font-semibold text-white transition-transform duration-150 active:scale-95"
             >
               查看更多实况
               <span className="ml-1">

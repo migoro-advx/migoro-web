@@ -34,3 +34,352 @@ body,
 body {
   margin: 0;
 }
+
+/* ============================== Motion ===================================
+   transitions.dev motion-token subset + the site's reusable enter-only
+   animations. Mobile-first: tap feedback, entrances, and loading motion only
+   — no hover effects, no close animations (dismissal stays instant).
+   Keyframes use the individual `translate` / `scale` properties so they
+   compose with any inline `transform` (SeasonCard fan, MapTiler markers). */
+:root {
+  /* Durations */
+  --duration-stagger: 40ms;
+  --duration-micro: 80ms;
+  --duration-quick: 150ms;
+  --duration-fast: 250ms;
+  --duration-medium: 350ms;
+  --duration-slow: 400ms;
+  --duration-very-slow: 500ms;
+
+  /* Easings (skip --ease-in-out — Tailwind already defines it) */
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.36, 0.64, 1);
+
+  /* Distances / scales / blurs */
+  --distance-small: 6px;
+  --distance-base: 8px;
+  --distance-medium: 12px;
+  --scale-large: 0.96;
+  --blur-small: 2px;
+  --blur-medium: 3px;
+  --blur-large: 8px;
+
+  /* Shimmer text (15-shimmer-text) — brand ink over muted. */
+  --shimmer-dur: 2000ms;
+  --shimmer-base: var(--color-muted);
+  --shimmer-highlight: var(--color-ink);
+  --shimmer-band: 400%;
+  --shimmer-ease: linear;
+
+  /* Skeleton pulse for image placeholders. */
+  --skel-pulse-dur: 1600ms;
+
+  /* Error shake (12-error-state-shake). */
+  --shake-distance: var(--distance-small);
+  --shake-overshoot: 4px;
+  --shake-dur-a: var(--duration-micro);
+  --shake-dur-b: 60ms;
+  --shake-ease: var(--ease-smooth-out);
+
+  /* Success check (10-success-check). */
+  --check-opacity-dur: var(--duration-very-slow);
+  --check-rotate-dur: var(--duration-very-slow);
+  --check-rotate-from: 80deg;
+  --check-bob-dur: var(--duration-very-slow);
+  --check-y-amount: 40px;
+  --check-blur-dur: var(--duration-very-slow);
+  --check-blur-from: var(--blur-large);
+  --check-path-dur: var(--duration-very-slow);
+  --check-path-delay: var(--duration-micro);
+  --check-ease-out: var(--ease-smooth-out);
+  --check-ease-bob: var(--ease-bounce);
+}
+
+/* --- Entrances (enter-only; animate on mount, none on unmount) --------- */
+@keyframes t-rise-in {
+  from {
+    opacity: 0;
+    translate: 0 var(--distance-medium);
+    filter: blur(var(--blur-small));
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    filter: blur(0);
+  }
+}
+@keyframes t-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes t-pop-in {
+  from {
+    opacity: 0;
+    scale: 0.5;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+@keyframes t-panel-in {
+  from {
+    opacity: 0;
+    translate: 0 var(--distance-base);
+    filter: blur(var(--blur-small));
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    filter: blur(0);
+  }
+}
+@keyframes t-slide-in {
+  from {
+    opacity: 0;
+    translate: var(--distance-base) 0;
+    filter: blur(var(--blur-medium));
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    filter: blur(0);
+  }
+}
+@keyframes t-modal-in {
+  from {
+    opacity: 0;
+    scale: var(--scale-large);
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+/* Bottom sheets, toasts, cards rising into place. */
+.t-rise-in {
+  animation: t-rise-in var(--duration-slow) var(--ease-smooth-out) backwards;
+}
+/* Quiet fade for secondary elements / loaded images. */
+.t-fade-in {
+  animation: t-fade-in var(--duration-fast) ease-in-out backwards;
+}
+/* Badge/marker pop (badge-appear semantics). */
+.t-pop-in {
+  animation: t-pop-in var(--duration-fast) var(--ease-bounce) backwards;
+}
+/* Full-screen overlay reveal (species query). */
+.t-panel-in {
+  animation: t-panel-in var(--duration-slow) var(--ease-smooth-out) backwards;
+}
+/* Share-journey step enter (page-slide semantics, enter-only). */
+.t-slide-in {
+  animation: t-slide-in var(--duration-fast) var(--ease-smooth-out) backwards;
+}
+/* Centered modal card (auth overlay). */
+.t-modal-in {
+  animation: t-modal-in var(--duration-fast) var(--ease-smooth-out) backwards;
+}
+
+/* Staggered list entrance: set `--i` per item (cap at 8 in JS so the total
+   stagger stays under ~320ms). */
+.t-stagger-item {
+  animation: t-rise-in var(--duration-slow) var(--ease-smooth-out) backwards;
+  animation-delay: calc(var(--i, 0) * var(--duration-stagger));
+}
+
+/* --- Loading ------------------------------------------------------------ */
+/* Shimmer text (15-shimmer-text): duplicate the string into data-text. */
+.t-shimmer {
+  position: relative;
+  display: inline-block;
+  color: var(--shimmer-base);
+}
+.t-shimmer::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 40%,
+    var(--shimmer-highlight) 50%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-size: var(--shimmer-band) 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: t-shimmer var(--shimmer-dur) var(--shimmer-ease) infinite;
+}
+@keyframes t-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0% 0;
+  }
+}
+
+/* Placeholder pulse while a photo loads. */
+@keyframes t-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+.t-skel-pulse {
+  animation: t-pulse var(--skel-pulse-dur) linear infinite;
+}
+
+/* Image reveal: start transparent, fade in once loaded (`is-loaded` is
+   added from the img's onLoad). Placeholder background shows through. */
+.t-img-reveal {
+  opacity: 0;
+  transition: opacity var(--duration-fast) ease-in-out;
+}
+.t-img-reveal.is-loaded {
+  opacity: 1;
+}
+
+/* --- Feedback ------------------------------------------------------------ */
+/* Error message: fade in + one percussive shake (12-error-state-shake,
+   enter-only — the message unmounts while a retry is pending, so mounting
+   replays it). %-stops are cumulative A,A,B,B legs of 80/60ms. */
+@keyframes t-shake {
+  0% {
+    translate: 0 0;
+    animation-timing-function: var(--shake-ease);
+  }
+  28.57% {
+    translate: var(--shake-distance) 0;
+    animation-timing-function: var(--shake-ease);
+  }
+  57.14% {
+    translate: calc(var(--shake-distance) * -1) 0;
+    animation-timing-function: var(--shake-ease);
+  }
+  78.57% {
+    translate: var(--shake-overshoot) 0;
+    animation-timing-function: var(--shake-ease);
+  }
+  100% {
+    translate: 0 0;
+  }
+}
+.t-shake-in {
+  animation:
+    t-fade-in var(--duration-quick) ease-in-out backwards,
+    t-shake calc(var(--shake-dur-a) * 2 + var(--shake-dur-b) * 2) linear;
+}
+
+/* Success check (10-success-check): fade + rotate + blur + Y-bob on the
+   wrapper, stroke-draw on the path. Rendered with data-state="in" — the
+   success step mounts fresh, so the animation plays on mount. */
+.t-success-check {
+  display: inline-block;
+  transform-origin: center;
+  opacity: 0;
+  will-change: transform, opacity, filter;
+}
+.t-success-check svg {
+  display: block;
+  overflow: visible;
+}
+/* 31 = getTotalLength() of the check path in SuccessStep, rounded up 1px. */
+.t-success-check svg path {
+  stroke-dasharray: 31;
+  stroke-dashoffset: 31;
+}
+.t-success-check[data-state='in'] {
+  animation:
+    t-check-fade var(--check-opacity-dur) var(--check-ease-out) forwards,
+    t-check-rotate var(--check-rotate-dur) var(--check-ease-out) forwards,
+    t-check-blur var(--check-blur-dur) var(--check-ease-out) forwards,
+    t-check-bob var(--check-bob-dur) var(--check-ease-bob) forwards;
+  /* Joins the sibling .t-stagger-item timeline: same --i-indexed delay. */
+  animation-delay: calc(var(--i, 0) * var(--duration-stagger));
+}
+.t-success-check[data-state='in'] svg path {
+  animation: t-check-draw var(--check-path-dur) var(--check-ease-out)
+    calc(var(--i, 0) * var(--duration-stagger) + var(--check-path-delay)) forwards;
+}
+@keyframes t-check-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes t-check-rotate {
+  from {
+    transform: rotate(var(--check-rotate-from));
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+@keyframes t-check-blur {
+  from {
+    filter: blur(var(--check-blur-from));
+  }
+  to {
+    filter: blur(0);
+  }
+}
+@keyframes t-check-bob {
+  from {
+    translate: 0 var(--check-y-amount);
+  }
+  to {
+    translate: 0 0;
+  }
+}
+@keyframes t-check-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* --- Reduced motion ------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  .t-rise-in,
+  .t-fade-in,
+  .t-pop-in,
+  .t-panel-in,
+  .t-slide-in,
+  .t-modal-in,
+  .t-stagger-item,
+  .t-skel-pulse,
+  .t-shake-in {
+    animation: none !important;
+  }
+  .t-shimmer::before {
+    animation: none !important;
+  }
+  .t-img-reveal {
+    opacity: 1;
+    transition: none;
+  }
+  .t-success-check {
+    animation: none !important;
+    opacity: 1;
+  }
+  .t-success-check svg path {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+}
