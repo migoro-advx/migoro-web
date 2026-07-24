@@ -3,7 +3,7 @@ node_modules
 dist
 dist-ssr
 *.local
-.env
+worker-configuration.d.ts
 .nitro
 .tanstack
 .wrangler

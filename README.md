@@ -187,3 +187,35 @@ Loaders simplify your data fetching logic dramatically. Check out more informati
 You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
 
 For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+
+# Deploying to Cloudflare Workers
+
+This project is set up to deploy to Cloudflare Workers (`@cloudflare/vite-plugin` + `wrangler`); see `wrangler.jsonc`.
+
+Environment variables follow the official Vite convention: public `VITE_*` variables are statically inlined at `vite build`. **The committed `.env` is the production public baseline** (production MapTiler key, `pk_live_` Clerk publishable key, etc. — all values safe to expose). For local development, override them with dev values in `.env.local` (gitignored); Vite loads `.env.local` with higher priority than `.env` in every mode, so `pnpm dev` uses dev values and never touches the production instances. Secrets (`CLERK_SECRET_KEY`, no `VITE_` prefix) are never committed: keep them in `.env.local` locally and a Cloudflare Worker Secret in production.
+
+## Manual steps you need to do
+
+1. **Local `.env.local`** (gitignored, never commit): set the dev `CLERK_SECRET_KEY`; if you want the dev instances locally, also override `VITE_MAPTILER_API_KEY` and `VITE_CLERK_PUBLISHABLE_KEY` with dev values.
+2. **Real backend**: set `VITE_API_BASE_URL` in `.env` to the real backend URL (changes to `.env` require a fresh `pnpm build`; leave empty until available).
+3. **Production secret**: set `CLERK_SECRET_KEY` on Cloudflare:
+
+   ```bash
+   pnpm exec wrangler secret put CLERK_SECRET_KEY
+   ```
+
+   (or add it in the Cloudflare dashboard: Workers -> your Worker -> Settings -> Variables and Secrets.)
+4. **MapTiler dashboard**: restrict the API key to your production domain(s) (the key is public by nature; domain allowlisting prevents abuse).
+5. **Clerk dashboard**: configure the production instance and add the production domain to the allowed origins.
+6. **First-time setup**: for local deploys run `pnpm exec wrangler login`; for Git CI, connect the repo to Workers Builds in Cloudflare. Confirm the `name` in `wrangler.jsonc` is the Worker name you want.
+7. **Deploy**: run `pnpm run deploy` locally, or push to the connected branch to trigger Workers Builds.
+8. **Optional**: bind a custom domain to the Worker in Cloudflare.
+
+## Local verification (no deploy)
+
+```bash
+pnpm lint
+pnpm build                            # validates client + workerd SSR bundles
+pnpm exec wrangler deploy --dry-run   # packaging check only, no upload
+```
+
