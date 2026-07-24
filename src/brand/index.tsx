@@ -2,15 +2,12 @@
  * Unified brand assets for 見頃.
  *
  * Single source of truth for the product name, brand color, and logo.
- * The real logo is undecided, so `BrandLogo` renders a solid blue square
- * placeholder for now — swap the implementation here when the asset lands.
+ * `BrandLogo` renders the flower mark from `public/logo.svg` — swap that file
+ * (and regenerate the icons under `public/icons/`) to update the artwork.
  */
 
 /** Canonical product name. Always displayed as the kanji on its own. */
 export const BRAND_NAME = '見頃'
-
-/** Primary brand color (placeholder until the real palette is defined). */
-export const BRAND_BLUE = '#2563eb'
 
 /**
  * Core palette for the peach/salmon + sage-green aesthetic, for use in JS
@@ -34,9 +31,10 @@ export const COLORS = {
 
 export function BrandLogo({ className }: { className?: string }) {
   return (
-    <div
+    <img
+      src="/logo.svg"
       className={className ?? 'h-12 w-12'}
-      style={{ backgroundColor: BRAND_BLUE }}
+      style={{ objectFit: 'contain' }}
       role="img"
       aria-label={BRAND_NAME}
     />
