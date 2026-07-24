@@ -15,7 +15,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 const DEG_PER_DAY = 2.4
 const RADIUS = 760
 const DEFAULT_DAYS_BACK = 30
-const DEFAULT_REVEAL_HEIGHT = '200px'
+const DEFAULT_REVEAL_HEIGHT = '240px'
 const MS_PER_DAY = 86_400_000
 const MIN_ANGLE = 0
 
@@ -33,8 +33,7 @@ const SETTLE_DIST = 0.15 // deg — settle threshold
 const MAX_DT = 0.032 // clamp per-frame step to avoid jumps after dropped frames
 const WHEEL_VELOCITY_K = 0.12 // wheel delta -> injected angular velocity
 
-const clamp = (value: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, value))
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
 /** Days between two dates, ignoring intra-day time (positive when `later` is newer). */
 function daysBetween(later: Date, earlier: Date): number {
@@ -140,8 +139,7 @@ export default function TimeDial({
   }, [rotation, mounted, now, onChange])
 
   const nearestDetent = useCallback(
-    (a: number) =>
-      clamp(Math.round(a / DEG_PER_DAY) * DEG_PER_DAY, MIN_ANGLE, maxAngle),
+    (a: number) => clamp(Math.round(a / DEG_PER_DAY) * DEG_PER_DAY, MIN_ANGLE, maxAngle),
     [maxAngle],
   )
 
