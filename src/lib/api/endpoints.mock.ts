@@ -224,6 +224,7 @@ function buildPostsForPlaceDay(placeId: string, date: string): Post[] {
         capturedAt: captured.toISOString(),
         publishedAt: published.toISOString(),
         timeSource,
+        imageUrl: `https://picsum.photos/seed/${placeId}__${date}__${sp.id}__${i}/640/800`,
       })
     }
   }

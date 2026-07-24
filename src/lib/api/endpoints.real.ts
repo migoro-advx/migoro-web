@@ -6,7 +6,7 @@
 // against real data. Coordinates cross the boundary here: WGS84 LngLat in the
 // app, EPSG:3857 metres on the wire.
 import { bboxToMercator, lngLatToMercator, mercatorToLngLat } from '#/lib/geo'
-import { request } from './client'
+import { assetUrl, request } from './client'
 import { BLOOM_STAGES } from './types'
 import type {
   Api,
@@ -33,10 +33,24 @@ interface SpeciesVO {
   standardName?: string
   /** 拉丁学名. */
   scientificName?: string
-  /** Whether the species is in its viewing season (computed for the current month). */
-  inSeason?: boolean
+  /** 英文名. */
+  englishName?: string
+  /** 别名列表. */
+  aliases?: string[]
+  /** 标准名全拼(小写),用于搜索. */
+  pinyin?: string
+  /** 代表图 COS 图片 uuid(访问走 /api/images/{uuid}). */
+  coverImageId?: string
+  /** 典型花期,二维数组 [[起始月,结束月],...];起始月>结束月表示跨年. */
+  bloomMonths?: number[][]
   /** Display period text, e.g. "3-4月". */
   bloomDisplay?: string
+  /** Whether the species is in its viewing season (computed for the current month). */
+  inSeason?: boolean
+  /** 热度/常用度(越大越靠前). */
+  popularity?: number
+  /** 简介. */
+  description?: string
 }
 
 /** `RecognitionItemVO` from `POST /api/species/recognize`. */
@@ -55,7 +69,7 @@ interface PostVO {
   speciesName?: string
   imageId?: string
   imageUrl?: string
-  /** 观赏状态码. */
+  /** 观赏状态码:BUD/FIRST_BLOOM/HALF_BLOOM/FULL_BLOOM/FALLING. */
   stage?: string
   /** 观赏状态中文名. */
   stageLabel?: string
@@ -98,21 +112,44 @@ function placeIdFromLocation(name: string): string {
 }
 
 /**
- * Bloom stage from a PostVO. The backend `stage` enum is undocumented, so we
- * key off the zh `stageLabel` (or `stage`) and fall back to 满开. Centralized
- * here alongside `stageToCode` so a code change is a one-line fix.
+ * Bidirectional map between the backend `stage` enum codes (documented on the
+ * `/api/posts` family) and our zh-CN `BloomStage` labels. Centralized so a code
+ * change is a one-line fix on either side.
+ */
+const STAGE_CODE_TO_LABEL: Record<string, BloomStage | undefined> = {
+  BUD: '含苞',
+  FIRST_BLOOM: '初开',
+  HALF_BLOOM: '五成',
+  FULL_BLOOM: '满开',
+  FALLING: '凋落',
+}
+
+const STAGE_LABEL_TO_CODE: Record<BloomStage, string> = {
+  含苞: 'BUD',
+  初开: 'FIRST_BLOOM',
+  五成: 'HALF_BLOOM',
+  满开: 'FULL_BLOOM',
+  凋落: 'FALLING',
+}
+
+/**
+ * Bloom stage from a PostVO. Prefer the documented `stage` enum code; if that
+ * is missing/unknown, fall back to `stageLabel` when it is already a zh label,
+ * and finally to 满开.
  */
 function stageFromVO(vo: PostVO): BloomStage {
-  const label = vo.stageLabel ?? vo.stage
+  const mapped = vo.stage ? STAGE_CODE_TO_LABEL[vo.stage] : undefined
+  if (mapped) return mapped
+  const label = vo.stageLabel
   if (label && (BLOOM_STAGES as readonly string[]).includes(label)) {
     return label as BloomStage
   }
   return '满开'
 }
 
-/** Bloom stage -> the `stage` code sent on publish. We send the zh label. */
+/** Bloom stage -> the `stage` enum code sent on publish. */
 function stageToCode(stage: BloomStage): string {
-  return stage
+  return STAGE_LABEL_TO_CODE[stage]
 }
 
 /** A synthetic Place for a post, keyed by its locationName. */
@@ -131,6 +168,20 @@ function speciesFromVO(vo: PostVO): Species {
   return { id: vo.speciesId, commonName: vo.speciesName ?? '', scientificName: '' }
 }
 
+/**
+ * Absolute photo URL for a post, or undefined when it has no image. Prefers the
+ * `imageId` (so a sized variant can be requested via `?width=&height=`), and
+ * falls back to the VO's relative `imageUrl`.
+ */
+function postImageSrc(vo: PostVO, size?: { width: number; height: number }): string | undefined {
+  if (vo.imageId) {
+    const query = size ? `?width=${size.width}&height=${size.height}` : ''
+    return assetUrl(`/api/images/${vo.imageId}${query}`)
+  }
+  if (vo.imageUrl) return assetUrl(vo.imageUrl)
+  return undefined
+}
+
 function toPost(vo: PostVO): Post {
   return {
     id: vo.id,
@@ -141,6 +192,7 @@ function toPost(vo: PostVO): Post {
     publishedAt: vo.publishedAt ?? vo.capturedAt,
     // The backend has no time-source field; default to on-site.
     timeSource: 'onsite',
+    imageUrl: postImageSrc(vo),
   }
 }
 
@@ -179,6 +231,9 @@ async function fetchPostsForDay(date: string, speciesId?: string): Promise<PostV
 
 export const realApi: Api = {
   async listSpecies(): Promise<Species[]> {
+    // Fetch the full catalog (no server-side keyword/inSeason filter): the
+    // species-query UI needs every species in one pass to group it into
+    // 当前花期 / 其他花卉 and filter client-side.
     const list = await request<SpeciesVO[]>('/api/species', { method: 'GET' })
     return list.map(toSpecies)
   },
@@ -234,6 +289,7 @@ export const realApi: Api = {
         bloomStage: stageFromVO(vo),
         capturedAt: vo.capturedAt,
         placeId: placeIdFromLocation(vo.locationName ?? ''),
+        thumbnailUrl: postImageSrc(vo, { width: 96, height: 96 }),
       }))
   },
 

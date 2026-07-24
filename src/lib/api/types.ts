@@ -118,6 +118,8 @@ export interface Post {
   /** ISO 8601 publish time. */
   publishedAt: string
   timeSource: TimeSource
+  /** Absolute URL of the post's photo, when the backend has one. */
+  imageUrl?: string
 }
 
 /**

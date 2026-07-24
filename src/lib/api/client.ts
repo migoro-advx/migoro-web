@@ -2,7 +2,17 @@
 // carry the Clerk session token (Bearer) when one is available; the mock
 // implementation (see index.ts) bypasses this entirely.
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
+export const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
+
+/**
+ * Absolute URL for a backend asset path (e.g. `/api/images/{uuid}`). Prefixes
+ * the API origin so a relative path from a VO can be used directly as an
+ * `<img src>`. With an empty BASE_URL (same origin) the relative path is
+ * returned unchanged.
+ */
+export function assetUrl(path: string): string {
+  return `${BASE_URL}${path}`
+}
 
 /**
  * Clerk session token for the current user, or null. Read from the browser

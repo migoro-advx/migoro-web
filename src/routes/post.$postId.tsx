@@ -2,8 +2,9 @@
 // post carries its own place + species (see mockApi.getPost), so no search
 // params are needed and the page is deep-linkable by id alone.
 //
-// Photos are brand placeholder blocks (no external requests). The mockup's
-// decorative orange scrollbar is intentionally not replicated.
+// The hero shows the post photo when the backend has one, falling back to a
+// brand placeholder block. The mockup's decorative orange scrollbar is
+// intentionally not replicated.
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import useSWR from 'swr'
 
@@ -51,8 +52,17 @@ function PostDetail() {
           <p className="mt-8 text-sm text-muted">加载中…</p>
         ) : (
           <>
-            {/* Hero — brand placeholder block. */}
-            <div className="aspect-[4/5] w-full overflow-hidden rounded-3xl bg-celadon" />
+            {/* Hero — the post photo over a brand placeholder background. */}
+            <div className="aspect-[4/5] w-full overflow-hidden rounded-3xl bg-celadon">
+              {post.imageUrl && (
+                <img
+                  src={post.imageUrl}
+                  alt={post.species.commonName}
+                  className="h-full w-full object-cover"
+                  onError={e => (e.currentTarget.style.display = 'none')}
+                />
+              )}
+            </div>
 
             <div className="mt-5 flex items-center gap-3">
               <h1 className="text-2xl font-bold text-ink">{post.species.commonName}</h1>

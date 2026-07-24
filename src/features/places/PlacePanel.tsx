@@ -90,11 +90,24 @@ export default function PlacePanel() {
               <span className="ml-1 font-semibold text-accent">{headline.bloomStage}</span>
             </div>
 
-            {/* Thumbnail row — brand placeholder blocks. */}
+            {/* Thumbnail row — recent post photos over brand placeholder blocks. */}
             <div className="mt-4 grid grid-cols-4 gap-2.5">
-              {Array.from({ length: thumbCount }).map((_, i) => (
-                <div key={i} className="aspect-square rounded-2xl bg-celadon" />
-              ))}
+              {Array.from({ length: thumbCount }).map((_, i) => {
+                const thumb = data.recentPosts.at(i)
+                return (
+                  <div key={i} className="aspect-square overflow-hidden rounded-2xl bg-celadon">
+                    {thumb?.imageUrl && (
+                      <img
+                        src={thumb.imageUrl}
+                        alt=""
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                        onError={e => (e.currentTarget.style.display = 'none')}
+                      />
+                    )}
+                  </div>
+                )
+              })}
             </div>
 
             {place.sensitive && (
