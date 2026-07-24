@@ -295,7 +295,8 @@ function buildPlaceSummary(params: PlacePostsQuery): PlaceSummary {
     ? matched.find(p => p.speciesId === headlineSpeciesId)
     : matched[0]
   const species =
-    MOCK_SPECIES.find(s => s.id === (headlinePost?.speciesId ?? headlineSpeciesId)) ?? MOCK_SPECIES[0]
+    MOCK_SPECIES.find(s => s.id === (headlinePost?.speciesId ?? headlineSpeciesId)) ??
+    MOCK_SPECIES[0]
 
   return {
     place,

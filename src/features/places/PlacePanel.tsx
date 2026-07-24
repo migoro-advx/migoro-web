@@ -76,7 +76,7 @@ export default function PlacePanel() {
           <>
             <div className="flex items-start justify-between gap-3">
               <h2 className="text-2xl font-bold text-ink">
-                {place.parkName} · {place.areaName}
+                {[place.parkName, place.areaName].filter(Boolean).join(' · ')}
               </h2>
               <SproutMark className="h-8 w-8 shrink-0" />
             </div>

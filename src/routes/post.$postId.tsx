@@ -94,7 +94,7 @@ function PostDetail() {
             >
               <div className="min-w-0 flex-1">
                 <p className="truncate text-base font-semibold text-ink">
-                  {post.place.parkName} · {post.place.areaName}
+                  {[post.place.parkName, post.place.areaName].filter(Boolean).join(' · ')}
                 </p>
                 <p className="mt-0.5 text-xs text-muted">具体点位 · 返回地图查看</p>
               </div>

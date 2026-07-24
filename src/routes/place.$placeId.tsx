@@ -106,7 +106,10 @@ function PostCard({
     <button type="button" onClick={onOpen} className="flex flex-col text-left">
       <div className="overflow-hidden rounded-3xl bg-white shadow-[0_8px_24px_rgba(0,0,0,.08)] ring-1 ring-black/5">
         {/* Bloom-stage color strip + brand placeholder image. */}
-        <div className="h-2 w-full" style={{ backgroundColor: BLOOM_STAGE_COLOR[post.bloomStage] }} />
+        <div
+          className="h-2 w-full"
+          style={{ backgroundColor: BLOOM_STAGE_COLOR[post.bloomStage] }}
+        />
         <div className="aspect-[4/3] w-full bg-celadon" />
       </div>
       <span className="mt-2 px-1 text-base font-semibold text-ink">{speciesName}</span>
