@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
 
 /**
  * Bottom-anchored half-dial (dome) time selector for 見頃.
@@ -65,6 +66,18 @@ export interface TimeDialProps {
    * (e.g. '200px', '25%', '24svh'). Larger = more of the arc shows.
    */
   revealHeight?: string
+  /**
+   * Prominent center label above the ticks (e.g. "今天 · 7月23日"). Rendered
+   * only after mount to avoid SSR/hydration mismatch on date-driven text.
+   */
+  label?: ReactNode
+  /** Secondary line under the label (e.g. "紫花鼠尾草 · 18条实况" / "暂无实况"). */
+  subtitle?: ReactNode
+  /**
+   * Distance from the viewport bottom (any CSS length). Lets callers lift the
+   * dome above a bottom nav. Defaults to 0.
+   */
+  bottomOffset?: string
 }
 
 export default function TimeDial({
@@ -75,6 +88,9 @@ export default function TimeDial({
   maxDaysBack = DEFAULT_DAYS_BACK,
   maxAngleDeg,
   revealHeight = DEFAULT_REVEAL_HEIGHT,
+  label,
+  subtitle,
+  bottomOffset = '0px',
 }: TimeDialProps) {
   // Seed "now" once so the reference date is stable across renders. Date-driven
   // output (labels, onChange) is gated behind `mounted` to avoid SSR mismatch.
@@ -297,8 +313,8 @@ export default function TimeDial({
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-40"
-      style={{ height: revealHeight }}
+      className="pointer-events-none fixed inset-x-0 z-40"
+      style={{ height: revealHeight, bottom: bottomOffset }}
     >
       {/* Fixed apex pointer — does not rotate with the wheel. */}
       <div
@@ -318,6 +334,26 @@ export default function TimeDial({
           style={{ top: 12, width: 2, height: 18, borderRadius: 1, background: '#e5484d' }}
         />
       </div>
+
+      {/* Center readout — day label + sighting subtitle + dial hint. Sits well
+          below the tick band so it never overlaps the rotating tick labels.
+          Gated behind `mounted` to keep date-driven text off the SSR output. */}
+      {mounted && (label || subtitle) && (
+        <div
+          className="pointer-events-none absolute left-1/2 z-20 flex -translate-x-1/2 flex-col items-center text-center"
+          style={{ top: 84 }}
+        >
+          {label && (
+            <div className="text-2xl font-bold whitespace-nowrap text-neutral-900">{label}</div>
+          )}
+          {subtitle && (
+            <div className="mt-1 text-sm whitespace-nowrap text-neutral-500">{subtitle}</div>
+          )}
+          <div className="mt-2 text-xs whitespace-nowrap text-neutral-400">
+            最近{maxDaysBack}天 · 每7天为一周
+          </div>
+        </div>
+      )}
 
       {/* Rotating dome (visual only). */}
       <div

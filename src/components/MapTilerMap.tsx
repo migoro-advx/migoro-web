@@ -1,10 +1,25 @@
-import { useEffect, useRef } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
 import { GeolocateControl, Language, Map, MapStyle, config } from '@maptiler/sdk'
+import { useSetAtom } from 'jotai'
 import '@maptiler/sdk/dist/maptiler-sdk.css'
+
+import { mapBoundsAtom, placeNameAtom } from '#/features/sightings/state'
+import { reverseGeocode } from '#/lib/geocoding'
 
 config.apiKey = import.meta.env.VITE_MAPTILER_API_KEY
 
 const LOCATE_ZOOM = 15
+
+/**
+ * The live MapTiler `Map`, shared with client-only children (e.g. the sightings
+ * marker layer). `null` until the map has loaded.
+ */
+const MapContext = createContext<Map | null>(null)
+
+export function useMapInstance(): Map | null {
+  return useContext(MapContext)
+}
 
 function getUserPosition(): Promise<GeolocationPosition | null> {
   if (!('geolocation' in navigator)) return Promise.resolve(null)
@@ -20,9 +35,12 @@ function getUserPosition(): Promise<GeolocationPosition | null> {
   })
 }
 
-export default function MapTilerMap() {
+export default function MapTilerMap({ children }: { children?: ReactNode }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<Map | null>(null)
+  const [map, setMap] = useState<Map | null>(null)
+  const setPlaceName = useSetAtom(placeNameAtom)
+  const setMapBounds = useSetAtom(mapBoundsAtom)
 
   useEffect(() => {
     if (mapRef.current || !containerRef.current) return
@@ -30,13 +48,34 @@ export default function MapTilerMap() {
     let cancelled = false
     const container = containerRef.current
 
+    // Reverse-geocode the map center to a district-level label for the 定位胶囊.
+    // A monotonic sequence discards out-of-order responses so rapid panning
+    // never leaves a stale place name.
+    let geocodeSeq = 0
+    const updatePlaceName = (m: Map) => {
+      const seq = ++geocodeSeq
+      const c = m.getCenter()
+      void reverseGeocode([c.lng, c.lat]).then(name => {
+        if (!cancelled && seq === geocodeSeq && name) {
+          setPlaceName(name.split(/[,，]/)[0]?.trim() ?? name)
+        }
+      })
+    }
+
+    // Publish the current viewport so sightings are queried within view.
+    const updateBounds = (m: Map) => {
+      if (cancelled) return
+      const b = m.getBounds()
+      setMapBounds([b.getWest(), b.getSouth(), b.getEast(), b.getNorth()])
+    }
+
     // Resolve the user's location first, then open the map already centered
     // there so the initial view IS the current location (no fly-in). Falls
     // back to MapTiler defaults if location is denied or unavailable.
     void getUserPosition().then(position => {
       if (cancelled) return
 
-      const map = new Map({
+      const mapInstance = new Map({
         container,
         style: MapStyle.STREETS,
         language: Language.SIMPLIFIED_CHINESE,
@@ -48,7 +87,7 @@ export default function MapTilerMap() {
             }
           : {}),
       })
-      mapRef.current = map
+      mapRef.current = mapInstance
 
       // Keep a locate control for the accuracy dot and on-demand
       // re-centering. animate:false makes it snap (never fly); the larger
@@ -64,17 +103,33 @@ export default function MapTilerMap() {
         showUserLocation: true,
         showAccuracyCircle: true,
       })
-      map.addControl(geolocate)
+      mapInstance.addControl(geolocate)
       geolocate.on('error', e => console.warn('Geolocation failed:', e?.message ?? e))
-      if (position) map.on('load', () => geolocate.trigger())
+      mapInstance.on('load', () => {
+        if (cancelled) return
+        if (position) geolocate.trigger()
+        setMap(mapInstance)
+        updatePlaceName(mapInstance)
+        updateBounds(mapInstance)
+      })
+      mapInstance.on('moveend', () => {
+        updatePlaceName(mapInstance)
+        updateBounds(mapInstance)
+      })
     })
 
     return () => {
       cancelled = true
+      setMap(null)
       mapRef.current?.remove()
       mapRef.current = null
     }
-  }, [])
+  }, [setPlaceName, setMapBounds])
 
-  return <div ref={containerRef} className="h-full w-full" />
+  return (
+    <div ref={containerRef} className="h-full w-full">
+      <MapContext.Provider value={map}>{children}</MapContext.Provider>
+    </div>
+  )
 }
+

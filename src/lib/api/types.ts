@@ -64,9 +64,38 @@ export interface CreatePostResult {
   id: string
 }
 
+/**
+ * A single field sighting (实况) — one person's observation of a species at a
+ * place and time. This is what the map plots and the TimeDial counts.
+ */
+export interface Sighting {
+  id: string
+  speciesId: string
+  coords: LngLat
+  bloomStage: BloomStage
+  /** ISO 8601 observation time. */
+  capturedAt: string
+  /** Optional photo for a thumbnail marker; absent renders a plain dot. */
+  thumbnailUrl?: string
+  /** Optional finer-grained area within the place, e.g. "湖畔入口 · 东侧花带". */
+  areaName?: string
+}
+
+/**
+ * Query for sightings shown on the map. `date` is the selected day (local
+ * calendar day, YYYY-MM-DD). `bbox` is the current map viewport as
+ * [west, south, east, north]; a real backend filters spatially by it.
+ */
+export interface SightingsQuery {
+  speciesId?: string
+  date: string
+  bbox?: [number, number, number, number]
+}
+
 /** The stable surface every implementation (mock or real) must satisfy. */
 export interface Api {
   recognizeSpecies: (image: string) => Promise<RecognitionCandidate[]>
   createPost: (payload: CreatePostPayload) => Promise<CreatePostResult>
   listSpecies: () => Promise<Species[]>
+  listSightings: (params: SightingsQuery) => Promise<Sighting[]>
 }
