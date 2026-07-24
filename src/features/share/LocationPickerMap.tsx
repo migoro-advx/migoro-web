@@ -65,7 +65,7 @@ export default function LocationPickerMap({
       <div ref={containerRef} className="h-full w-full" />
       {/* Center pin overlay — always marks the map center. */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <span className="h-4 w-4 rounded-full bg-orange-500 ring-4 ring-white" aria-hidden />
+        <span className="h-4 w-4 rounded-full bg-accent ring-4 ring-white" aria-hidden />
       </div>
     </div>
   )

@@ -19,8 +19,6 @@ import {
   submitStateAtom,
 } from '#/features/share/state'
 
-const PEACH = '#f7d9c9'
-
 /** Format an ISO capture time as e.g. "2026年7月23日 09:41". */
 function formatCaptureTime(iso: string): string {
   const d = new Date(iso)
@@ -68,33 +66,25 @@ export default function DetailStep() {
   return (
     <form onSubmit={handleSubmit} className="flex h-full flex-col bg-white">
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 pt-[calc(env(safe-area-inset-top)+1rem)] pb-4">
-        <div>
-          <h1 className="text-3xl font-bold text-neutral-900">发布实况</h1>
-          <p className="mt-1 text-sm text-neutral-400">补齐可验证的花叶情报</p>
-        </div>
+        <h1 className="text-3xl font-bold text-ink">发布实况</h1>
 
-        {/* Thumbnail. Single-image model: exactly one capture, no add-more affordance. */}
-        <div className="flex items-center gap-3">
-          <span
-            className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl"
-            style={{ backgroundColor: PEACH }}
-          >
-            {capture && (
-              <img src={capture.dataUrl} alt="所拍照片" className="h-full w-full object-cover" />
-            )}
-          </span>
+        {/* Photo. Single-image model: exactly one capture, no add-more affordance. */}
+        <div className="aspect-[16/10] w-full overflow-hidden rounded-3xl bg-celadon">
+          {capture && (
+            <img src={capture.dataUrl} alt="所拍照片" className="h-full w-full object-cover" />
+          )}
         </div>
 
         {/* 物种 */}
-        <div className="rounded-2xl bg-neutral-100 px-4 py-3">
-          <span className="block text-xs text-neutral-400">物种 *</span>
+        <div className="rounded-2xl bg-ink/5 px-4 py-3">
+          <span className="block text-xs text-muted">物种 *</span>
           <div className="mt-0.5 flex items-center gap-2">
             <select
               value={selectedSpecies?.id ?? ''}
               onChange={e =>
                 setSelectedSpecies(speciesList.find(s => s.id === e.target.value) ?? null)
               }
-              className="max-w-full bg-transparent text-sm text-neutral-900 focus:outline-none"
+              className="max-w-full bg-transparent text-sm text-ink focus:outline-none"
             >
               <option value="">未选择</option>
               {speciesList.map(species => (
@@ -103,13 +93,13 @@ export default function DetailStep() {
                 </option>
               ))}
             </select>
-            {selectedSpecies && <span className="text-sm text-neutral-400">· 用户确认</span>}
+            {selectedSpecies && <span className="text-sm text-muted">· 用户确认</span>}
           </div>
         </div>
 
         {/* 观赏状态 */}
         <fieldset>
-          <legend className="text-xs text-neutral-400">观赏状态 *</legend>
+          <legend className="text-xs text-muted">观赏状态 *</legend>
           <div className="mt-2 flex flex-wrap gap-2">
             {BLOOM_STAGES.map(stage => (
               <button
@@ -123,8 +113,8 @@ export default function DetailStep() {
                 }
                 className={
                   form.bloomStage === stage
-                    ? 'rounded-full bg-neutral-900 px-4 py-2 text-sm text-white'
-                    : 'rounded-full bg-neutral-100 px-4 py-2 text-sm text-neutral-700'
+                    ? 'rounded-full bg-accent px-4 py-2 text-sm text-white'
+                    : 'rounded-full bg-ink/5 px-4 py-2 text-sm text-ink'
                 }
               >
                 {stage}
@@ -137,30 +127,30 @@ export default function DetailStep() {
         <button
           type="button"
           onClick={() => setStep('location')}
-          className="block w-full rounded-2xl bg-neutral-100 px-4 py-3 text-left"
+          className="block w-full rounded-2xl bg-celadon px-4 py-3 text-left"
         >
-          <span className="block text-xs text-neutral-400">具体点位 *</span>
-          <span className="mt-0.5 block text-sm text-neutral-900">
+          <span className="block text-xs text-muted">具体点位 *</span>
+          <span className="mt-0.5 block text-sm text-ink">
             {locationSummary || '点按修正拍摄位置'}
           </span>
         </button>
 
         {/* 拍摄时间 — read-only, trusted field. */}
-        <div className="rounded-2xl bg-neutral-100 px-4 py-3">
-          <span className="block text-xs text-neutral-400">拍摄时间 *</span>
-          <span className="mt-0.5 block text-sm text-neutral-900">
+        <div className="rounded-2xl bg-peach px-4 py-3">
+          <span className="block text-xs text-muted">拍摄时间 *</span>
+          <span className="mt-0.5 block text-sm text-ink">
             {capture ? formatCaptureTime(capture.meta.capturedAt) : '—'}
           </span>
-          <span className="mt-1 block text-xs text-neutral-400">现场拍摄 · 可信字段，只读</span>
+          <span className="mt-1 block text-xs text-muted">现场拍摄 · 可信字段，只读</span>
         </div>
 
         {/* Confirmation gate. */}
-        <label className="flex items-center gap-2 text-sm text-neutral-700">
+        <label className="flex items-center gap-2 text-sm text-ink">
           <input
             type="checkbox"
             checked={confirmed}
             onChange={e => setConfirmed(e.target.checked)}
-            className="h-4 w-4 accent-neutral-900"
+            className="h-4 w-4 accent-ink"
           />
           我已确认拍摄时间和地点
         </label>
@@ -175,7 +165,7 @@ export default function DetailStep() {
         <button
           type="submit"
           disabled={submitting || !confirmed}
-          className="rounded-full bg-neutral-900 px-8 py-3 text-sm text-white disabled:opacity-40"
+          className="mx-auto rounded-full bg-ink px-16 py-3 text-sm text-white disabled:opacity-40"
         >
           {submitting ? '发布中…' : '发布实况'}
         </button>

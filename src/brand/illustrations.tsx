@@ -19,9 +19,7 @@ const SEASON_FLOWERS = [
 /** Flower shown on a 当前花期 card, picked by card position from the fixed set. */
 export function SpeciesFlower({ index, className }: { index: number; className?: string }) {
   const src = SEASON_FLOWERS[index % SEASON_FLOWERS.length]
-  return (
-    <img src={src} alt="" aria-hidden className={className} style={{ objectFit: 'contain' }} />
-  )
+  return <img src={src} alt="" aria-hidden className={className} style={{ objectFit: 'contain' }} />
 }
 
 /** Small seedling used in the peach banners (empty-state card + 暂未收录 footer). */
@@ -29,6 +27,22 @@ export function SproutMark({ className }: { className?: string }) {
   return (
     <img
       src="/illustrations/sprout.svg"
+      alt=""
+      aria-hidden
+      className={className}
+      style={{ objectFit: 'contain' }}
+    />
+  )
+}
+
+/**
+ * Single flower mark used in the share journey (物种确认 primary card +
+ * 发布成功 avatar). Drop the artwork at `public/illustrations/bloom.svg`.
+ */
+export function BloomMark({ className }: { className?: string }) {
+  return (
+    <img
+      src="/illustrations/bloom.svg"
       alt=""
       aria-hidden
       className={className}

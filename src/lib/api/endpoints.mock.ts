@@ -37,7 +37,7 @@ const MOCK_SPECIES: Species[] = [
     commonName: '紫花鼠尾草',
     inSeason: true,
     periodLabel: '花期 6-8月',
-    accentColor: '#d7e3df',
+    accentColor: '#DCECEF',
   },
   {
     id: 'hydrangea-macrophylla',

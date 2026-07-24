@@ -19,12 +19,12 @@ export const BRAND_NAME = '見頃'
 export const COLORS = {
   accent: '#e8865a', // primary orange — title, ticks, apex, 清除, links
   accentStrong: '#ef7a4d', // FAB
-  peach: '#fbe0d0', // banners / card panels
+  peach: '#FCE3D6', // banners / card panels
   peachRim: '#f6ccae', // dome rim / search ring
   peachTick: '#dd8a5f', // dial ticks
   sage: '#9fb083', // nav circles / green pill
   sageSoft: '#c8d4b4',
-  celadon: '#d7e3df', // blue-green tint / pills
+  celadon: '#DCECEF', // blue-green tint / pills
   ink: '#3d3a36', // warm near-black text
   muted: '#9a968f', // secondary text
 } as const

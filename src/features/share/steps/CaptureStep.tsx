@@ -3,10 +3,12 @@
 // album uploads read EXIF for capture time (required) and GPS (falls back to
 // geolocation, to be confirmed by the user in the location step).
 //
-// Layout mirrors the "AI拍照" design: black frame, top toolbar, a rounded
-// viewfinder card, and a 相册 | shutter | 识别 bottom bar. The 闪光/网格/镜头
-// labels and the 识别 label are presentational — they align the layout to the
-// mock; the real camera controls behind them are out of scope for now.
+// Layout mirrors the "AI拍照" design: black frame, a celadon viewfinder card,
+// and a 相册 | shutter | flip bottom bar. Camera parameter controls (flash,
+// exposure, focal length, etc.) are intentionally omitted — the web platform
+// can't drive them reliably across devices. The camera-flip button toggles
+// facingMode, which is well supported. The ✕ close is a minimal placeholder to
+// be restyled later.
 import { useEffect, useRef, useState } from 'react'
 import { useSetAtom } from 'jotai'
 
@@ -14,9 +16,6 @@ import type { CaptureMeta } from '#/lib/api'
 import { getCurrentLngLat } from '#/lib/geolocation'
 import { readCaptureMeta } from '#/lib/exif'
 import { captureAtom, stepAtom } from '#/features/share/state'
-
-// Peach placeholder used across the journey while no real image is present.
-const PEACH = '#f7d9c9'
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -36,14 +35,16 @@ export default function CaptureStep({ onClose }: { onClose: () => void }) {
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [facing, setFacing] = useState<'environment' | 'user'>('environment')
 
   useEffect(() => {
     let cancelled = false
+    setCameraReady(false)
 
     async function start() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' },
+          video: { facingMode: facing },
           audio: false,
         })
         if (cancelled) {
@@ -67,7 +68,7 @@ export default function CaptureStep({ onClose }: { onClose: () => void }) {
       streamRef.current?.getTracks().forEach(track => track.stop())
       streamRef.current = null
     }
-  }, [])
+  }, [facing])
 
   async function handleShutter() {
     const video = videoRef.current
@@ -126,27 +127,19 @@ export default function CaptureStep({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="flex h-full flex-col bg-black text-white">
-      {/* Top toolbar. ✕ closes; the rest are presentational labels. */}
-      <div className="flex items-center gap-5 px-5 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3 text-sm">
+      {/* Top bar. Minimal ✕ close placeholder — to be restyled later. */}
+      <div className="flex items-center px-5 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3">
         <button type="button" onClick={onClose} aria-label="关闭" className="text-lg leading-none">
           ✕
         </button>
-        <span className="text-white/80">闪光</span>
-        <span className="text-white/80">网格</span>
-        <span className="text-white/80">镜头</span>
       </div>
 
       {/* Viewfinder card. */}
       <div className="flex flex-1 items-center px-5">
-        <div
-          className="relative aspect-[3/4] w-full overflow-hidden rounded-3xl"
-          style={{ backgroundColor: PEACH }}
-        >
+        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-3xl bg-celadon">
           <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
-          {/* Inner framing guide. */}
-          <div className="pointer-events-none absolute inset-6 rounded-xl border border-white/50" />
           {cameraError ? (
-            <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-neutral-700">
+            <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-ink">
               {cameraError}
             </div>
           ) : (
@@ -160,16 +153,34 @@ export default function CaptureStep({ onClose }: { onClose: () => void }) {
       </div>
 
       {notice && (
-        <p className="mx-5 mt-3 rounded-xl bg-amber-100 px-4 py-2 text-sm text-amber-900">
-          {notice}
-        </p>
+        <p className="mx-5 mt-3 rounded-xl bg-peach px-4 py-2 text-sm text-ink">{notice}</p>
       )}
 
-      {/* Bottom bar: 相册 | shutter | 识别. */}
+      {/* Bottom bar: 相册 | shutter | 翻转. */}
       <div className="px-5 pt-5 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
         <div className="grid grid-cols-3 items-center">
-          <label className="cursor-pointer justify-self-start text-sm text-white/80">
-            相册
+          <label className="cursor-pointer justify-self-start">
+            <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-celadon text-ink">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <rect
+                  x="3"
+                  y="4"
+                  width="18"
+                  height="16"
+                  rx="3"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                />
+                <circle cx="8.5" cy="9" r="1.5" fill="currentColor" />
+                <path
+                  d="M4 18l4.5-5 3.5 3.5L15 13l5 5"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
             <input
               type="file"
               accept="image/*"
@@ -189,7 +200,22 @@ export default function CaptureStep({ onClose }: { onClose: () => void }) {
             <span className="block h-14 w-14 rounded-full bg-white" />
           </button>
 
-          <span className="justify-self-end text-sm text-white/80">识别</span>
+          <button
+            type="button"
+            onClick={() => setFacing(prev => (prev === 'environment' ? 'user' : 'environment'))}
+            aria-label="翻转镜头"
+            className="flex h-16 w-16 items-center justify-center justify-self-end rounded-2xl bg-ink text-white"
+          >
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path
+                d="M4 8a2 2 0 0 1 2-2h1.5l1-1.5h5l1 1.5H18a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinejoin="round"
+              />
+              <circle cx="12" cy="12" r="2.5" stroke="currentColor" strokeWidth="1.6" />
+            </svg>
+          </button>
         </div>
         <p className="mt-4 text-center text-xs text-white/50">拍摄时将记录设备时间与位置</p>
       </div>
