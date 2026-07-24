@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MeRouteImport } from './routes/me'
 import { Route as ShareRouteImport } from './routes/share'
 import { Route as PlacePlaceIdRouteImport } from './routes/place.$placeId'
 import { Route as PostPostIdRouteImport } from './routes/post.$postId'
@@ -17,6 +18,11 @@ import { Route as PostPostIdRouteImport } from './routes/post.$postId'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeRoute = MeRouteImport.update({
+  id: '/me',
+  path: '/me',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShareRoute = ShareRouteImport.update({
@@ -37,12 +43,14 @@ const PostPostIdRoute = PostPostIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/me': typeof MeRoute
   '/share': typeof ShareRoute
   '/place/$placeId': typeof PlacePlaceIdRoute
   '/post/$postId': typeof PostPostIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/me': typeof MeRoute
   '/share': typeof ShareRoute
   '/place/$placeId': typeof PlacePlaceIdRoute
   '/post/$postId': typeof PostPostIdRoute
@@ -50,20 +58,22 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/me': typeof MeRoute
   '/share': typeof ShareRoute
   '/place/$placeId': typeof PlacePlaceIdRoute
   '/post/$postId': typeof PostPostIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/share' | '/place/$placeId' | '/post/$postId'
+  fullPaths: '/' | '/me' | '/share' | '/place/$placeId' | '/post/$postId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/share' | '/place/$placeId' | '/post/$postId'
-  id: '__root__' | '/' | '/share' | '/place/$placeId' | '/post/$postId'
+  to: '/' | '/me' | '/share' | '/place/$placeId' | '/post/$postId'
+  id: '__root__' | '/' | '/me' | '/share' | '/place/$placeId' | '/post/$postId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  MeRoute: typeof MeRoute
   ShareRoute: typeof ShareRoute
   PlacePlaceIdRoute: typeof PlacePlaceIdRoute
   PostPostIdRoute: typeof PostPostIdRoute
@@ -76,6 +86,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me': {
+      id: '/me'
+      path: '/me'
+      fullPath: '/me'
+      preLoaderRoute: typeof MeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/share': {
@@ -104,6 +121,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  MeRoute: MeRoute,
   ShareRoute: ShareRoute,
   PlacePlaceIdRoute: PlacePlaceIdRoute,
   PostPostIdRoute: PostPostIdRoute,

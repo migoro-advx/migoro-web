@@ -18,6 +18,7 @@ import type {
   PlaceSummary,
   Post,
   PostDetail,
+  PostStatus,
   RecognitionCandidate,
   Sighting,
   SightingsQuery,
@@ -152,6 +153,15 @@ function stageToCode(stage: BloomStage): string {
   return STAGE_LABEL_TO_CODE[stage]
 }
 
+const POST_STATUSES: readonly PostStatus[] = ['PUBLISHED', 'HIDDEN', 'DELETED']
+
+/** Documented status code from a PostVO, or undefined for unknown values. */
+function statusFromVO(vo: PostVO): PostStatus | undefined {
+  return (POST_STATUSES as readonly string[]).includes(vo.status ?? '')
+    ? (vo.status as PostStatus)
+    : undefined
+}
+
 /** A synthetic Place for a post, keyed by its locationName. */
 function synthPlace(vo: PostVO): Place {
   const name = vo.locationName ?? ''
@@ -193,6 +203,9 @@ function toPost(vo: PostVO): Post {
     // The backend has no time-source field; default to on-site.
     timeSource: 'onsite',
     imageUrl: postImageSrc(vo),
+    authorId: vo.authorId,
+    status: statusFromVO(vo),
+    locationName: vo.locationName,
   }
 }
 
@@ -333,6 +346,13 @@ export const realApi: Api = {
   async getPost(postId: string): Promise<PostDetail> {
     const vo = await request<PostVO>(`/api/posts/${postId}`, { method: 'GET' })
     return { ...toPost(vo), place: synthPlace(vo), species: speciesFromVO(vo) }
+  },
+
+  async listMyPosts(userId: string): Promise<Post[]> {
+    // Auth-only, self-only endpoint (403 for other users); returns every
+    // status, already sorted by creation time descending — keep that order.
+    const list = await request<PostVO[]>(`/api/users/${userId}/posts`, { method: 'GET' })
+    return list.map(toPost)
   },
 
   async createPost(payload: CreatePostPayload): Promise<CreatePostResult> {

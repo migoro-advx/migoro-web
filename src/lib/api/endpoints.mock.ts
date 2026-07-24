@@ -12,6 +12,7 @@ import type {
   PlaceSummary,
   Post,
   PostDetail,
+  PostStatus,
   RecognitionCandidate,
   Sighting,
   SightingsQuery,
@@ -299,6 +300,122 @@ function buildPlaceSummary(params: PlacePostsQuery): PlaceSummary {
   }
 }
 
+// --- 我的帖子 seed ------------------------------------------------------------
+// The profile page needs the user's own posts across every status. Seeded once
+// per session (capture times are relative to "now"), reusing the world's place
+// defs so a card's 具体点位 matches the map's vocabulary. The owner's Clerk id
+// is stamped when `listMyPosts` runs, so `getPost` can echo it back and the
+// detail page's 编辑 affordance shows up in mock mode too.
+
+interface MyPostDef {
+  speciesId: string
+  bloomStage: BloomStage
+  daysBack: number
+  hour: number
+  minute: number
+  status: PostStatus
+  placeIndex: number
+  timeSource: TimeSource
+}
+
+const MY_POST_DEFS: MyPostDef[] = [
+  // Mirrors the mockup's spread: mixed species/places, non-public states early.
+  {
+    speciesId: 'salvia-nemorosa',
+    bloomStage: '满开',
+    daysBack: 1,
+    hour: 9,
+    minute: 41,
+    status: 'HIDDEN',
+    placeIndex: 0,
+    timeSource: 'onsite',
+  },
+  {
+    speciesId: 'prunus-serrulata',
+    bloomStage: '满开',
+    daysBack: 2,
+    hour: 10,
+    minute: 12,
+    status: 'PUBLISHED',
+    placeIndex: 0,
+    timeSource: 'onsite',
+  },
+  {
+    speciesId: 'hydrangea-macrophylla',
+    bloomStage: '满开',
+    daysBack: 3,
+    hour: 14,
+    minute: 5,
+    status: 'DELETED',
+    placeIndex: 1,
+    timeSource: 'album',
+  },
+  {
+    speciesId: 'ginkgo-biloba',
+    bloomStage: '满开',
+    daysBack: 4,
+    hour: 8,
+    minute: 30,
+    status: 'HIDDEN',
+    placeIndex: 4,
+    timeSource: 'onsite',
+  },
+  {
+    speciesId: 'acer-palmatum',
+    bloomStage: '满开',
+    daysBack: 5,
+    hour: 16,
+    minute: 20,
+    status: 'PUBLISHED',
+    placeIndex: 3,
+    timeSource: 'album',
+  },
+  {
+    speciesId: 'prunus-mume',
+    bloomStage: '满开',
+    daysBack: 6,
+    hour: 11,
+    minute: 48,
+    status: 'PUBLISHED',
+    placeIndex: 2,
+    timeSource: 'onsite',
+  },
+]
+
+// Owner id captured from the last listMyPosts call so getPost can stamp it.
+let myPostsOwner: string | undefined
+
+let myPosts: Post[] | null = null
+
+function getMyPosts(): Post[] {
+  if (myPosts) return myPosts
+  const now = new Date()
+  myPosts = MY_POST_DEFS.map((def, i) => {
+    const captured = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - def.daysBack,
+      def.hour,
+      def.minute,
+    )
+    const published = new Date(captured.getTime() + 27 * 60_000)
+    const place = PLACE_DEFS[def.placeIndex]
+    return {
+      id: `my__${i}__${def.speciesId}`,
+      placeId: place.id,
+      speciesId: def.speciesId,
+      bloomStage: def.bloomStage,
+      capturedAt: captured.toISOString(),
+      publishedAt: published.toISOString(),
+      timeSource: def.timeSource,
+      imageUrl: `https://picsum.photos/seed/my__${i}__${def.speciesId}/640/800`,
+      status: def.status,
+      locationName: `${place.parkName} · ${place.areaName}`,
+    }
+  })
+  return myPosts
+}
+
 export const mockApi: Api = {
   async recognizeSpecies(_image: string): Promise<RecognitionCandidate[]> {
     await delay(900)
@@ -338,6 +455,14 @@ export const mockApi: Api = {
 
   async getPost(postId: string): Promise<PostDetail> {
     await delay(300)
+    // The user's own seeded posts live outside the place-day world.
+    const mine = getMyPosts().find(p => p.id === postId)
+    if (mine) {
+      const place = findPlace(mine.placeId)
+      const species = MOCK_SPECIES.find(s => s.id === mine.speciesId)
+      if (!place || !species) throw new Error(`Post not found: ${postId}`)
+      return { ...mine, authorId: myPostsOwner, place, species }
+    }
     const [placeId, date] = postId.split('__')
     if (!placeId || !date) throw new Error(`Malformed post id: ${postId}`)
     const post = buildPostsForPlaceDay(placeId, date).find(p => p.id === postId)
@@ -345,5 +470,11 @@ export const mockApi: Api = {
     const species = MOCK_SPECIES.find(s => s.id === post?.speciesId)
     if (!post || !place || !species) throw new Error(`Post not found: ${postId}`)
     return { ...post, place, species }
+  },
+
+  async listMyPosts(userId: string): Promise<Post[]> {
+    await delay(350)
+    myPostsOwner = userId
+    return getMyPosts().map(p => ({ ...p, authorId: userId }))
   },
 }

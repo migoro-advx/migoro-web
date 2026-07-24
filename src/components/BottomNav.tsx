@@ -1,8 +1,7 @@
 // Bottom navigation bar shown on the map home page and the species overlay.
-// Behavior is unchanged from the labeled version: left = 地图 (current page,
-// no-op), center = 拍摄 (opens /share), right = 我的 (inert placeholder). Only
-// the appearance follows the mockup — two sage circular buttons flanking a
-// raised orange floating action button.
+// Left = 地图 (back to the map), center = 拍摄 (opens /share), right = 我的
+// (opens the profile page). The appearance follows the mockup — two sage
+// circular buttons flanking a raised orange floating action button.
 import { Link } from '@tanstack/react-router'
 
 /**
@@ -71,13 +70,14 @@ export default function BottomNav() {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 bg-white pb-6" aria-label="主导航">
       <div className="relative mx-auto flex h-[60px] max-w-md items-center justify-between px-10">
-        {/* 地图 — current page, no navigation. */}
-        <span
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-sage text-white"
+        {/* 地图 — back to the map home. */}
+        <Link
+          to="/"
           aria-label="地图"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-sage text-white"
         >
           <LocateIcon />
-        </span>
+        </Link>
 
         {/* 拍摄 — raised orange FAB opening the photo-share journey. */}
         <Link
@@ -88,15 +88,14 @@ export default function BottomNav() {
           <PlusIcon />
         </Link>
 
-        {/* 我的 — inert placeholder until that section exists. */}
-        <button
-          type="button"
-          disabled
+        {/* 我的 — the login-gated profile page. */}
+        <Link
+          to="/me"
           aria-label="我的"
           className="flex h-12 w-12 items-center justify-center rounded-full bg-sage text-white"
         >
           <ProfileIcon />
-        </button>
+        </Link>
       </div>
     </nav>
   )

@@ -1,59 +1,71 @@
-// 帖子详情 — a single post's full view. Reached from the waterfall grid. The
-// post carries its own place + species (see mockApi.getPost), so no search
-// params are needed and the page is deep-linkable by id alone.
+// 帖子详情 — a single post's full view, shared by every entry point (map,
+// place waterfall, 个人主页). Deep-linkable by id alone.
 //
-// The hero shows the post photo when the backend has one, falling back to a
-// brand placeholder block. The mockup's decorative orange scrollbar is
-// intentionally not replicated.
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
+// Layout follows the 我的帖子详情 mockup: a top bar (back / title / 编辑), the
+// photo hero, a white species card with a solid stage pill, and a peach
+// 实况记录 card of label/value rows. 编辑 renders only when the signed-in user
+// authored the post, and is an inert placeholder for now.
+import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
+import { useUser } from '@clerk/tanstack-react-start'
 import useSWR from 'swr'
 
-import BottomNav, { NAV_OFFSET } from '#/components/BottomNav'
-import { api } from '#/lib/api'
-import { BLOOM_STAGE_COLOR } from '#/features/sightings/markers'
-import { dayKey } from '#/features/sightings/state'
-import { hourMinute, monthDay, relativeDay } from '#/features/places/format'
+import { api, POST_STATUS_LABEL } from '#/lib/api'
+import { fullDate } from '#/features/places/format'
 
 export const Route = createFileRoute('/post/$postId')({
   component: PostDetail,
 })
 
-const TIME_SOURCE_LABEL = { onsite: '现场拍摄', album: '相册' } as const
-
-function ChevronRight() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden className="text-muted">
-      <path d="m9 6 6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  )
-}
+/** 时间来源 trust copy — how the capture timestamp was obtained. */
+const TIME_SOURCE_LABEL = { onsite: '现场拍摄 · 设备时间', album: '相册 · 照片时间' } as const
 
 function PostDetail() {
   const { postId } = Route.useParams()
+  const router = useRouter()
   const navigate = useNavigate()
+  const { user } = useUser()
 
-  const { data: post, isLoading } = useSWR(['post', postId], () => api.getPost(postId))
+  const { data: post, error, isLoading } = useSWR(['post', postId], () => api.getPost(postId))
+
+  const isAuthor = Boolean(user?.id && post?.authorId && user.id === post.authorId)
+  const locationText =
+    post?.locationName ?? [post?.place.parkName, post?.place.areaName].filter(Boolean).join(' · ')
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-y-auto bg-white">
-      <div
-        className="mx-auto w-full max-w-md px-5 pt-[calc(env(safe-area-inset-top)+1rem)]"
-        style={{ paddingBottom: `calc(${NAV_OFFSET} + 2rem)` }}
-      >
-        <Link
-          to="/"
-          aria-label="返回地图"
-          className="-ml-2 mb-3 flex h-9 w-9 items-center justify-center rounded-full text-2xl text-muted"
-        >
-          <span aria-hidden>‹</span>
-        </Link>
+      <div className="mx-auto w-full max-w-md px-5 pb-[calc(env(safe-area-inset-bottom)+2rem)] pt-[calc(env(safe-area-inset-top)+1rem)]">
+        {/* Top bar — back / centered title / 编辑 (author only). */}
+        <div className="relative flex h-11 items-center justify-between">
+          <button
+            type="button"
+            aria-label="返回"
+            onClick={() =>
+              router.history.canGoBack() ? router.history.back() : navigate({ to: '/' })
+            }
+            className="-ml-2 flex h-9 w-9 items-center justify-center rounded-full text-2xl text-ink"
+          >
+            <span aria-hidden>‹</span>
+          </button>
+          <h1 className="absolute left-1/2 -translate-x-1/2 text-lg font-bold text-ink">
+            帖子详情
+          </h1>
+          {isAuthor && (
+            // TODO: 后端用户侧编辑接口就绪后接入（目前 PUT 仅在管理端）。
+            <button type="button" disabled className="text-sm font-semibold text-accent">
+              编辑
+            </button>
+          )}
+        </div>
 
-        {isLoading || !post ? (
+        {error ? (
+          // The public endpoint 404s for hidden/deleted posts reached from /me.
+          <p className="mt-8 text-sm text-muted">帖子不存在或已删除。</p>
+        ) : isLoading || !post ? (
           <p className="mt-8 text-sm text-muted">加载中…</p>
         ) : (
           <>
             {/* Hero — the post photo over a brand placeholder background. */}
-            <div className="aspect-[4/5] w-full overflow-hidden rounded-3xl bg-celadon">
+            <div className="mt-3 aspect-[4/5] w-full overflow-hidden rounded-3xl bg-celadon">
               {post.imageUrl && (
                 <img
                   src={post.imageUrl}
@@ -64,53 +76,41 @@ function PostDetail() {
               )}
             </div>
 
-            <div className="mt-5 flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-ink">{post.species.commonName}</h1>
-              <span className="inline-flex items-center rounded-full bg-peach px-3 py-1 text-sm font-semibold text-accent">
-                <span
-                  className="mr-1.5 h-2 w-2 rounded-full"
-                  style={{ backgroundColor: BLOOM_STAGE_COLOR[post.bloomStage] }}
-                />
+            {/* Species card — name + status, solid stage pill on the right. */}
+            <div className="mt-5 flex items-center gap-3 rounded-3xl bg-white px-5 py-4 shadow-[0_8px_24px_rgba(0,0,0,.08)] ring-1 ring-black/5">
+              <div className="min-w-0 flex-1">
+                <h2 className="truncate text-xl font-bold text-ink">{post.species.commonName}</h2>
+                <p className="mt-0.5 text-sm text-muted">
+                  {POST_STATUS_LABEL[post.status ?? 'PUBLISHED']}
+                </p>
+              </div>
+              <span className="shrink-0 rounded-full bg-accent-strong px-3.5 py-1.5 text-sm font-semibold text-white">
                 {post.bloomStage}
               </span>
             </div>
 
-            <p className="mt-3 text-sm text-muted">
-              拍摄于 {monthDay(new Date(post.capturedAt))} {hourMinute(new Date(post.capturedAt))}
-            </p>
-            <p className="mt-1 text-sm text-muted">
-              发布于 {relativeDay(new Date(post.publishedAt))} · 时间来源：
-              {TIME_SOURCE_LABEL[post.timeSource]}
-            </p>
-
-            {/* Location card — taps back to the place waterfall. */}
-            <button
-              type="button"
-              onClick={() =>
-                navigate({
-                  to: '/place/$placeId',
-                  params: { placeId: post.place.id },
-                  search: {
-                    date: dayKey(new Date(post.capturedAt)),
-                    species: post.speciesId,
-                  },
-                })
-              }
-              className="mt-6 flex w-full items-center gap-3 rounded-3xl bg-white px-4 py-3.5 text-left shadow-[0_8px_24px_rgba(0,0,0,.08)] ring-1 ring-black/5"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-base font-semibold text-ink">
-                  {[post.place.parkName, post.place.areaName].filter(Boolean).join(' · ')}
-                </p>
-                <p className="mt-0.5 text-xs text-muted">具体点位 · 返回地图查看</p>
-              </div>
-              <ChevronRight />
-            </button>
+            {/* 实况记录 — trust metadata as label/value rows. */}
+            <div className="mt-4 rounded-3xl bg-peach px-5 py-5">
+              <h3 className="text-base font-bold text-ink">实况记录</h3>
+              <dl className="mt-3 space-y-3">
+                <RecordRow label="拍摄于" value={fullDate(new Date(post.capturedAt))} />
+                {locationText && <RecordRow label="具体点位" value={locationText} />}
+                <RecordRow label="时间来源" value={TIME_SOURCE_LABEL[post.timeSource]} />
+                <RecordRow label="发布于" value={fullDate(new Date(post.publishedAt))} />
+              </dl>
+            </div>
           </>
         )}
       </div>
+    </div>
+  )
+}
 
-      <BottomNav />
+function RecordRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4">
+      <dt className="shrink-0 text-sm text-muted">{label}</dt>
+      <dd className="text-right text-sm font-medium text-ink">{value}</dd>
     </div>
   )
 }

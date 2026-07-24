@@ -26,6 +26,11 @@ export function hourMinute(date: Date): string {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
+/** "YYYY年M月D日 HH:mm" — the detail page's 实况记录 timestamps. */
+export function fullDate(date: Date): string {
+  return `${date.getFullYear()}年${monthDay(date)} ${hourMinute(date)}`
+}
+
 /** Distance as "1.2 km" or "320 m", or `null` when it cannot be computed. */
 export function formatDistance(km: number | null): string | null {
   if (km == null || !Number.isFinite(km)) return null

@@ -12,11 +12,9 @@ import { useAtomValue } from 'jotai'
 import useSWR from 'swr'
 
 import BottomNav, { NAV_OFFSET } from '#/components/BottomNav'
+import PostCard from '#/components/PostCard'
 import { api } from '#/lib/api'
-import type { Post } from '#/lib/api'
-import { BLOOM_STAGE_COLOR } from '#/features/sightings/markers'
 import { dayKey, mapBoundsAtom } from '#/features/sightings/state'
-import { hourMinute, relativeDay } from '#/features/places/format'
 
 interface PlaceSearch {
   date: string
@@ -89,33 +87,5 @@ function PlaceWaterfall() {
 
       <BottomNav />
     </div>
-  )
-}
-
-function PostCard({
-  post,
-  speciesName,
-  onOpen,
-}: {
-  post: Post
-  speciesName: string
-  onOpen: () => void
-}) {
-  const captured = new Date(post.capturedAt)
-  return (
-    <button type="button" onClick={onOpen} className="flex flex-col text-left">
-      <div className="overflow-hidden rounded-3xl bg-white shadow-[0_8px_24px_rgba(0,0,0,.08)] ring-1 ring-black/5">
-        {/* Bloom-stage color strip + brand placeholder image. */}
-        <div
-          className="h-2 w-full"
-          style={{ backgroundColor: BLOOM_STAGE_COLOR[post.bloomStage] }}
-        />
-        <div className="aspect-[4/3] w-full bg-celadon" />
-      </div>
-      <span className="mt-2 px-1 text-base font-semibold text-ink">{speciesName}</span>
-      <span className="px-1 text-xs text-muted">
-        {post.bloomStage} · 拍摄于{relativeDay(captured)} {hourMinute(captured)}
-      </span>
-    </button>
   )
 }

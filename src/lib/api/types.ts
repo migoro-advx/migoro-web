@@ -104,6 +104,16 @@ export interface Place {
 /** How a post's capture time was obtained; surfaced as a trust signal. */
 export type TimeSource = 'onsite' | 'album'
 
+/** Backend post lifecycle status (PostVO.status). */
+export type PostStatus = 'PUBLISHED' | 'HIDDEN' | 'DELETED'
+
+/** zh-CN display text for each post status. */
+export const POST_STATUS_LABEL: Record<PostStatus, string> = {
+  PUBLISHED: '已发布',
+  HIDDEN: '已隐藏',
+  DELETED: '已删除',
+}
+
 /**
  * A published sighting (帖子) with the richer fields the waterfall and detail
  * pages need. A `Sighting` is the map projection of a `Post`.
@@ -120,6 +130,12 @@ export interface Post {
   timeSource: TimeSource
   /** Absolute URL of the post's photo, when the backend has one. */
   imageUrl?: string
+  /** Author's Clerk user id — the detail page's 编辑 visibility check. */
+  authorId?: string
+  /** Lifecycle status; only surfaced on the profile page's own posts. */
+  status?: PostStatus
+  /** Raw 具体点位 short name from the backend, e.g. "梧桐公园 · 湖畔入口". */
+  locationName?: string
 }
 
 /**
@@ -172,4 +188,6 @@ export interface Api {
   listPlacePosts: (params: PlacePostsQuery) => Promise<Post[]>
   /** Single post detail by id, with place + species resolved. Mock-only. */
   getPost: (postId: string) => Promise<PostDetail>
+  /** All of the current user's posts (any status), newest first. Auth required. */
+  listMyPosts: (userId: string) => Promise<Post[]>
 }
