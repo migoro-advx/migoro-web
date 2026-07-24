@@ -169,7 +169,7 @@ function SeasonCard({
       className="flex w-[34%] flex-col rounded-3xl bg-white p-2 text-left shadow-[0_8px_24px_rgba(214,138,95,.18)] ring-1 ring-black/5"
     >
       <span className="flex w-full items-center justify-center">
-        <SpeciesFlower speciesId={species.id} className="w-full block" />
+        <SpeciesFlower index={index} className="w-full block" />
       </span>
       <span className="mt-2 px-1 text-sm font-semibold text-ink">{species.commonName}</span>
       {species.periodLabel && (

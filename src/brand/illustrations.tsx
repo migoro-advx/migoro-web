@@ -4,22 +4,23 @@
  * These are plain <img> references to static SVG files under `public/`, served
  * at the site root. Drop the artwork in and it shows up — no code change needed.
  *
- *   public/illustrations/<speciesId>.svg   — 当前花期 card flowers
- *   public/illustrations/sprout.svg         — 嫩芽 used in the peach banners
- *
- * e.g. 樱花 -> public/illustrations/prunus-serrulata.svg
+ *   public/illustrations/*.svg     — 当前花期 card flowers (fixed rotation, see below)
+ *   public/illustrations/sprout.svg — 嫩芽 used in the peach banners
  */
 
-/** Per-species flower shown on a 当前花期 card. */
-export function SpeciesFlower({ speciesId, className }: { speciesId: string; className?: string }) {
+// 当前花期 cards always use these three illustrations in this fixed order,
+// cycling by card position — independent of the actual species data.
+const SEASON_FLOWERS = [
+  '/illustrations/prunus-serrulata.svg',
+  '/illustrations/salvia-nemorosa.svg',
+  '/illustrations/hydrangea-macrophylla.svg',
+] as const
+
+/** Flower shown on a 当前花期 card, picked by card position from the fixed set. */
+export function SpeciesFlower({ index, className }: { index: number; className?: string }) {
+  const src = SEASON_FLOWERS[index % SEASON_FLOWERS.length]
   return (
-    <img
-      src={`/illustrations/${speciesId}.svg`}
-      alt=""
-      aria-hidden
-      className={className}
-      style={{ objectFit: 'contain' }}
-    />
+    <img src={src} alt="" aria-hidden className={className} style={{ objectFit: 'contain' }} />
   )
 }
 
