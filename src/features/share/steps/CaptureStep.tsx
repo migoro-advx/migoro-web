@@ -142,13 +142,7 @@ export default function CaptureStep({ onClose }: { onClose: () => void }) {
           className="relative aspect-[3/4] w-full overflow-hidden rounded-3xl"
           style={{ backgroundColor: PEACH }}
         >
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className="h-full w-full object-cover"
-          />
+          <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
           {/* Inner framing guide. */}
           <div className="pointer-events-none absolute inset-6 rounded-xl border border-white/50" />
           {cameraError ? (
@@ -166,7 +160,9 @@ export default function CaptureStep({ onClose }: { onClose: () => void }) {
       </div>
 
       {notice && (
-        <p className="mx-5 mt-3 rounded-xl bg-amber-100 px-4 py-2 text-sm text-amber-900">{notice}</p>
+        <p className="mx-5 mt-3 rounded-xl bg-amber-100 px-4 py-2 text-sm text-amber-900">
+          {notice}
+        </p>
       )}
 
       {/* Bottom bar: 相册 | shutter | 识别. */}

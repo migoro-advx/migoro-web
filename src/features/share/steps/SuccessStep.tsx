@@ -56,7 +56,9 @@ export default function SuccessStep({ onClose }: { onClose: () => void }) {
           )}
         </span>
         <div className="min-w-0">
-          <p className="text-base font-bold text-neutral-900">{species?.commonName ?? '未选择物种'}</p>
+          <p className="text-base font-bold text-neutral-900">
+            {species?.commonName ?? '未选择物种'}
+          </p>
           {form.bloomStage && <p className="mt-1 text-sm text-orange-500">{form.bloomStage}</p>}
           {capture && (
             <p className="mt-1 text-sm text-neutral-500">

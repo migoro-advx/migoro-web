@@ -113,7 +113,11 @@ function daysBackFromToday(date: string): number {
 }
 
 /** How many sightings a (species, day) pair should have. */
-function sightingCount(speciesId: string | undefined, daysBack: number, rand: () => number): number {
+function sightingCount(
+  speciesId: string | undefined,
+  daysBack: number,
+  rand: () => number,
+): number {
   // Overview (no species filter): a light sample across the region.
   if (!speciesId) return 6
   // Design-locked states for the demo species.

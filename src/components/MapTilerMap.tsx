@@ -132,4 +132,3 @@ export default function MapTilerMap({ children }: { children?: ReactNode }) {
     </div>
   )
 }
-

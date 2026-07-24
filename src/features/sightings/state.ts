@@ -36,4 +36,3 @@ export const placeNameAtom = atom<string | null>(null)
  * map has loaded.
  */
 export const mapBoundsAtom = atom<[number, number, number, number] | null>(null)
-

@@ -29,9 +29,7 @@ export default function SpeciesQuery() {
     const q = query.trim().toLowerCase()
     const matched = q
       ? list.filter(
-          s =>
-            s.commonName.toLowerCase().includes(q) ||
-            s.scientificName.toLowerCase().includes(q),
+          s => s.commonName.toLowerCase().includes(q) || s.scientificName.toLowerCase().includes(q),
         )
       : list
     return {
@@ -121,11 +119,7 @@ export default function SpeciesQuery() {
 
 function SeasonCard({ species, onPick }: { species: Species; onPick: (s: Species) => void }) {
   return (
-    <button
-      type="button"
-      onClick={() => onPick(species)}
-      className="flex flex-col text-left"
-    >
+    <button type="button" onClick={() => onPick(species)} className="flex flex-col text-left">
       <span
         className="flex aspect-square w-full items-center justify-center rounded-2xl"
         style={{ backgroundColor: species.accentColor ?? FALLBACK_ACCENT }}
@@ -149,9 +143,7 @@ function OtherRow({ species, onPick }: { species: Species; onPick: (s: Species) 
     >
       <span className="text-sm text-neutral-800">
         {species.commonName}
-        {species.periodLabel && (
-          <span className="text-neutral-400"> · {species.periodLabel}</span>
-        )}
+        {species.periodLabel && <span className="text-neutral-400"> · {species.periodLabel}</span>}
       </span>
       <span aria-hidden className="text-lg text-neutral-300">
         ›

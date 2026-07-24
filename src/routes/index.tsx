@@ -68,7 +68,11 @@ function Home() {
               onClick={() => setQueryOpen(true)}
               className="flex-1 text-left text-sm text-neutral-800"
             >
-              {selectedSpecies ? selectedSpecies.commonName : <span className="text-neutral-400">查哪一种花？</span>}
+              {selectedSpecies ? (
+                selectedSpecies.commonName
+              ) : (
+                <span className="text-neutral-400">查哪一种花？</span>
+              )}
             </button>
             {selectedSpecies && (
               <button
@@ -98,7 +102,9 @@ function Home() {
             <p className="text-base font-semibold text-neutral-900">
               这一天暂时没有「{selectedSpecies.commonName}」实况。
             </p>
-            <p className="mt-1.5 text-sm text-neutral-400">换一天看看，或分享你在现场看到的样子。</p>
+            <p className="mt-1.5 text-sm text-neutral-400">
+              换一天看看，或分享你在现场看到的样子。
+            </p>
           </div>
         </div>
       )}

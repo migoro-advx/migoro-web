@@ -40,9 +40,7 @@ export default function LocationPickerMap({
       style: MapStyle.STREETS,
       language: Language.SIMPLIFIED_CHINESE,
       geolocateControl: false,
-      ...(initialCenterRef.current
-        ? { center: initialCenterRef.current, zoom: LOCATE_ZOOM }
-        : {}),
+      ...(initialCenterRef.current ? { center: initialCenterRef.current, zoom: LOCATE_ZOOM } : {}),
     })
     mapRef.current = map
 

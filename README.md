@@ -205,6 +205,7 @@ Environment variables follow the official Vite convention: public `VITE_*` varia
    ```
 
    (or add it in the Cloudflare dashboard: Workers -> your Worker -> Settings -> Variables and Secrets.)
+
 4. **MapTiler dashboard**: restrict the API key to your production domain(s) (the key is public by nature; domain allowlisting prevents abuse).
 5. **Clerk dashboard**: configure the production instance and add the production domain to the allowed origins.
 6. **First-time setup**: for local deploys run `pnpm exec wrangler login`; for Git CI, connect the repo to Workers Builds in Cloudflare. Confirm the `name` in `wrangler.jsonc` is the Worker name you want.
@@ -218,4 +219,3 @@ pnpm lint
 pnpm build                            # validates client + workerd SSR bundles
 pnpm exec wrangler deploy --dry-run   # packaging check only, no upload
 ```
-
