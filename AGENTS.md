@@ -20,6 +20,7 @@ Important notes for anyone (human or agent) working in this repository.
 
 - TanStack Start (SSR) + `@tanstack/react-router`, React 19, Vite 8, Tailwind CSS v4.
 - Package manager: **pnpm**.
+- **Client-side first.** Frontend and backend are fully separated, so this app is designed client-first. TanStack Start still performs an SSR/prerender pass, so code must not crash during SSR and must avoid hydration mismatches (see "Agent working principles"), but treat the browser as the primary runtime and keep app logic/state on the client.
 
 ## Map (MapTiler)
 
@@ -36,3 +37,23 @@ Important notes for anyone (human or agent) working in this repository.
 - `pnpm build` — production build (validates both client and SSR bundles).
 - `pnpm lint` — lint.
 - `pnpm generate-routes` — regenerate the TanStack route tree (`tsr generate`).
+
+## Time dial
+
+- `src/components/TimeDial.tsx` is a bottom-anchored half-dial (dome) day selector: drag or wheel to pick a day within the past 30 days (future locked, non-looping). One minor tick = 1 day, one major tick = 1 week.
+- Motion is driven by a single `requestAnimationFrame` physics loop: inertia + friction fling, a critically-damped detent spring that snaps onto whole days, and a rubber-band spring at the bounds. All parameters are module-level constants (units in degrees/seconds); tune those rather than inlining numbers.
+- The interactive hit area is constrained to the real circle via `clip-path: circle(50%)` on a transparent layer sitting above the visual dome. Never use `overflow-hidden` to fake a rectangular hit box, and keep the box-shadow on the visual layer (clip-path would clip it).
+- Honors `prefers-reduced-motion`: skip inertia/rubber-band and land directly on the nearest day.
+
+## Verifying changes
+
+- After any code change, run `pnpm lint` and `pnpm build`. The build validates both the client and SSR bundles — SSR-only breakage frequently shows up nowhere else.
+- **Do not use automated browser tooling (browser-use / MCP browser) to "test" behavior on the user's behalf.** Interactive feel (drag, inertia, gestures, animation) cannot be judged from a screenshot and it burns cycles. Instead: finish the change, confirm lint + build pass, then hand off with concrete manual steps for the human — which page/URL, what to do, and what to look for.
+
+## Agent working principles
+
+- **Preserve the user's manual edits.** If the user says they hand-fixed something, do not revert it; build on top of it.
+- **SSR / hydration safety.** Any component whose output depends on the current time, randomness, or browser APIs must avoid a server/client mismatch: seed such values once via a `useState` initializer and gate date-driven rendering and `onChange` behind a `mounted` flag (see `TimeDial.tsx`).
+- **Keep tunable behavior in named constants.** Interaction/physics parameters (speeds, stiffness, thresholds) belong in module-level constants with units noted, not as inline magic numbers.
+- **Match the surrounding code.** Follow the existing naming, comment density, and idioms instead of introducing a new style.
+- **Only commit when asked.** Do not create commits proactively; leave changes staged/unstaged for the user unless they explicitly request a commit.
