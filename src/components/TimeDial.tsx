@@ -19,6 +19,20 @@ const DEFAULT_REVEAL_HEIGHT = '200px'
 const MS_PER_DAY = 86_400_000
 const MIN_ANGLE = 0
 
+// Physics tuning for the "real dial" feel (units: degrees, seconds).
+const FRICTION = 3.2 // fling velocity decays as v *= exp(-FRICTION * dt)
+const DETENT_ENGAGE_SPEED = DEG_PER_DAY * 8 // below this the detent spring engages
+const DETENT_STIFFNESS = 220
+const DETENT_DAMPING = 2 * Math.sqrt(DETENT_STIFFNESS) // critical: no overshoot
+const BOUNDARY_STIFFNESS = 320
+const BOUNDARY_DAMPING = 2 * Math.sqrt(BOUNDARY_STIFFNESS)
+const RUBBER_FACTOR = 0.35 // damping applied to the overshoot while dragging past a bound
+const DRAG_DETENT_BIAS = 0.12 // slow-drag magnetic pull toward the nearest day
+const SETTLE_SPEED = 0.6 // deg/s — settle threshold
+const SETTLE_DIST = 0.15 // deg — settle threshold
+const MAX_DT = 0.032 // clamp per-frame step to avoid jumps after dropped frames
+const WHEEL_VELOCITY_K = 0.12 // wheel delta -> injected angular velocity
+
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value))
 
@@ -82,18 +96,38 @@ export default function TimeDial({
   const centerRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
   const lastAngleRef = useRef(0)
   const draggingRef = useRef(false)
-  const snapRafRef = useRef<number | null>(null)
-  const wheelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const emittedDaysRef = useRef<number | null>(null)
+
+  // Physics state (mutable, read/written every frame without re-rendering).
+  const rotationRef = useRef(initialAngle) // float mirror of `rotation`
+  const velocityRef = useRef(0) // deg/s
+  const lastMoveTsRef = useRef(0) // timestamp of the last pointer move
+  const animatingRef = useRef(false) // physics loop running?
+  const rafRef = useRef<number | null>(null)
+  const reducedMotionRef = useRef(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  // Keep rotation in sync when used as a controlled component.
+  // Track the user's reduced-motion preference (skip inertia when set).
   useEffect(() => {
-    if (!value || draggingRef.current) return
-    setRotation(clamp(daysBetween(now, value) * DEG_PER_DAY, MIN_ANGLE, maxAngle))
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    reducedMotionRef.current = mq.matches
+    const onChangeMq = (e: MediaQueryListEvent) => {
+      reducedMotionRef.current = e.matches
+    }
+    mq.addEventListener('change', onChangeMq)
+    return () => mq.removeEventListener('change', onChangeMq)
+  }, [])
+
+  // Keep rotation in sync when used as a controlled component (but never
+  // interrupt an active drag or a running physics animation).
+  useEffect(() => {
+    if (!value || draggingRef.current || animatingRef.current) return
+    const a = clamp(daysBetween(now, value) * DEG_PER_DAY, MIN_ANGLE, maxAngle)
+    rotationRef.current = a
+    setRotation(a)
   }, [value, now, maxAngle])
 
   // Emit onChange when the selected day changes (after mount only).
@@ -105,31 +139,82 @@ export default function TimeDial({
     onChange?.(new Date(now.getTime() - daysBack * MS_PER_DAY))
   }, [rotation, mounted, now, onChange])
 
-  const cancelSnap = useCallback(() => {
-    if (snapRafRef.current !== null) {
-      cancelAnimationFrame(snapRafRef.current)
-      snapRafRef.current = null
+  const nearestDetent = useCallback(
+    (a: number) =>
+      clamp(Math.round(a / DEG_PER_DAY) * DEG_PER_DAY, MIN_ANGLE, maxAngle),
+    [maxAngle],
+  )
+
+  const stopPhysics = useCallback(() => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = null
     }
+    animatingRef.current = false
   }, [])
 
-  const snap = useCallback(() => {
-    cancelSnap()
-    const target = clamp(
-      Math.round(rotation / DEG_PER_DAY) * DEG_PER_DAY,
-      MIN_ANGLE,
-      maxAngle,
-    )
-    const from = rotation
-    const start = performance.now()
-    const duration = 220
-    const step = (t: number) => {
-      const p = Math.min(1, (t - start) / duration)
-      const ease = 1 - (1 - p) ** 3
-      setRotation(from + (target - from) * ease)
-      snapRafRef.current = p < 1 ? requestAnimationFrame(step) : null
+  const settleTo = useCallback(
+    (angle: number) => {
+      const a = nearestDetent(angle)
+      rotationRef.current = a
+      velocityRef.current = 0
+      setRotation(a)
+    },
+    [nearestDetent],
+  )
+
+  // Unified physics loop: fling (friction) -> detent spring (magnetic snap),
+  // with a stiffer spring pulling back inside the bounds (rubber-band return).
+  const startPhysics = useCallback(() => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = null
     }
-    snapRafRef.current = requestAnimationFrame(step)
-  }, [rotation, maxAngle, cancelSnap])
+    if (reducedMotionRef.current) {
+      settleTo(rotationRef.current)
+      return
+    }
+    animatingRef.current = true
+    let last = performance.now()
+    const step = (t: number) => {
+      const dt = Math.min(MAX_DT, (t - last) / 1000)
+      last = t
+      let rot = rotationRef.current
+      let v = velocityRef.current
+
+      if (rot < MIN_ANGLE || rot > maxAngle) {
+        // Out of bounds: strong spring pulls back to the nearest edge.
+        const target = clamp(rot, MIN_ANGLE, maxAngle)
+        v += (-BOUNDARY_STIFFNESS * (rot - target) - BOUNDARY_DAMPING * v) * dt
+      } else if (Math.abs(v) >= DETENT_ENGAGE_SPEED) {
+        // Fast fling: coast, decaying by friction and gliding over detents.
+        v *= Math.exp(-FRICTION * dt)
+      } else {
+        // Slow: detent spring magnetically settles onto the nearest day.
+        const target = nearestDetent(rot)
+        v += (-DETENT_STIFFNESS * (rot - target) - DETENT_DAMPING * v) * dt
+      }
+
+      rot += v * dt
+      rotationRef.current = rot
+      velocityRef.current = v
+      setRotation(rot)
+
+      const inBounds = rot >= MIN_ANGLE && rot <= maxAngle
+      if (
+        inBounds &&
+        Math.abs(v) < SETTLE_SPEED &&
+        Math.abs(rot - nearestDetent(rot)) < SETTLE_DIST
+      ) {
+        settleTo(rot)
+        rafRef.current = null
+        animatingRef.current = false
+        return
+      }
+      rafRef.current = requestAnimationFrame(step)
+    }
+    rafRef.current = requestAnimationFrame(step)
+  }, [maxAngle, nearestDetent, settleTo])
 
   const pointerAngle = useCallback((clientX: number, clientY: number) => {
     const { x, y } = centerRef.current
@@ -150,47 +235,65 @@ export default function TimeDial({
       draggingRef.current = true
       el.setPointerCapture(e.pointerId)
       lastAngleRef.current = pointerAngle(e.clientX, e.clientY)
-      cancelSnap()
+      lastMoveTsRef.current = performance.now()
+      velocityRef.current = 0
+      stopPhysics()
     },
-    [pointerAngle, cancelSnap],
+    [pointerAngle, stopPhysics],
   )
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       if (!draggingRef.current) return
+      const t = performance.now()
       const angle = pointerAngle(e.clientX, e.clientY)
       let delta = angle - lastAngleRef.current
       if (delta > 180) delta -= 360
       if (delta < -180) delta += 360
       lastAngleRef.current = angle
-      setRotation(prev => clamp(prev + delta, MIN_ANGLE, maxAngle))
+
+      const dt = Math.max(0.001, (t - lastMoveTsRef.current) / 1000)
+      lastMoveTsRef.current = t
+
+      // Smoothed instantaneous speed feeds the release fling.
+      const instV = delta / dt
+      velocityRef.current = velocityRef.current * 0.6 + instV * 0.4
+
+      let next = rotationRef.current + delta
+      // Rubber-band: only the overshoot past a bound is damped.
+      if (next < MIN_ANGLE) next = MIN_ANGLE + (next - MIN_ANGLE) * RUBBER_FACTOR
+      else if (next > maxAngle) next = maxAngle + (next - maxAngle) * RUBBER_FACTOR
+
+      // Subtle per-day magnetic bias while dragging slowly; fades out with speed.
+      const speedFade = Math.max(0, 1 - Math.abs(instV) / DETENT_ENGAGE_SPEED)
+      if (speedFade > 0 && next >= MIN_ANGLE && next <= maxAngle) {
+        next += DRAG_DETENT_BIAS * speedFade * (nearestDetent(next) - next)
+      }
+
+      rotationRef.current = next
+      setRotation(next)
     },
-    [pointerAngle, maxAngle],
+    [pointerAngle, maxAngle, nearestDetent],
   )
 
   const endDrag = useCallback(() => {
     if (!draggingRef.current) return
     draggingRef.current = false
-    snap()
-  }, [snap])
+    // A pause before releasing means no fling.
+    if (performance.now() - lastMoveTsRef.current > 80) velocityRef.current = 0
+    startPhysics()
+  }, [startPhysics])
 
   const handleWheel = useCallback(
     (e: React.WheelEvent<HTMLDivElement>) => {
-      cancelSnap()
-      setRotation(prev => clamp(prev + (e.deltaY + e.deltaX) * 0.04, MIN_ANGLE, maxAngle))
-      if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current)
-      wheelTimerRef.current = setTimeout(snap, 140)
+      // Inject angular velocity and let the shared physics loop settle it.
+      velocityRef.current += (e.deltaY + e.deltaX) * WHEEL_VELOCITY_K
+      startPhysics()
     },
-    [maxAngle, snap, cancelSnap],
+    [startPhysics],
   )
 
-  useEffect(
-    () => () => {
-      cancelSnap()
-      if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current)
-    },
-    [cancelSnap],
-  )
+  useEffect(() => () => stopPhysics(), [stopPhysics])
 
   const days = Array.from({ length: maxDaysBack + 1 }, (_, d) => d)
 
