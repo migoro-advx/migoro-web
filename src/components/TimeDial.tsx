@@ -104,13 +104,11 @@ export default function TimeDial({
 
   const maxAngle = maxAngleDeg ?? maxDaysBack * DEG_PER_DAY
 
-  const initialAngle = (() => {
-    const seed = value ?? defaultValue
-    if (!seed) return MIN_ANGLE
-    return clamp(daysBetween(now, seed) * DEG_PER_DAY, MIN_ANGLE, maxAngle)
-  })()
-
-  const [rotation, setRotation] = useState(initialAngle)
+  // The apex angle is date-derived (depends on `now` = new Date()), so it can
+  // differ between the SSR render and client hydration. Start every render at
+  // MIN_ANGLE and apply the real angle after mount (see the mount effect) so the
+  // dome's rotate transform can't cause a hydration mismatch.
+  const [rotation, setRotation] = useState(MIN_ANGLE)
 
   const wheelRef = useRef<HTMLDivElement>(null)
   const centerRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
@@ -119,7 +117,7 @@ export default function TimeDial({
   const emittedDaysRef = useRef<number | null>(null)
 
   // Physics state (mutable, read/written every frame without re-rendering).
-  const rotationRef = useRef(initialAngle) // float mirror of `rotation`
+  const rotationRef = useRef(MIN_ANGLE) // float mirror of `rotation`
   const velocityRef = useRef(0) // deg/s
   const lastMoveTsRef = useRef(0) // timestamp of the last pointer move
   const animatingRef = useRef(false) // physics loop running?
@@ -128,6 +126,16 @@ export default function TimeDial({
 
   useEffect(() => {
     setMounted(true)
+    // Now on the client: apply the real, date-derived starting angle (SSR and
+    // the first client render stayed at MIN_ANGLE to avoid a hydration mismatch
+    // on the dome's rotate transform). Later `value` changes are handled by the
+    // controlled-sync effect below.
+    const seed = value ?? defaultValue
+    if (seed && !draggingRef.current && !animatingRef.current) {
+      const a = clamp(daysBetween(now, seed) * DEG_PER_DAY, MIN_ANGLE, maxAngle)
+      rotationRef.current = a
+      setRotation(a)
+    }
   }, [])
 
   // Track the user's reduced-motion preference (skip inertia when set).
