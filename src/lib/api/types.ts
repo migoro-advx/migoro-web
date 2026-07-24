@@ -43,8 +43,11 @@ export interface CaptureMeta {
 
 export interface RecognitionCandidate {
   species: Species
-  /** Model confidence in [0, 1]. */
-  confidence: number
+  /**
+   * Model confidence in [0, 1]. Optional — the real recognition endpoint does
+   * not return a score, and no UI surfaces it; the mock still provides one.
+   */
+  confidence?: number
 }
 
 export interface CreatePostPayload {

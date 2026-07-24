@@ -9,3 +9,14 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+// Clerk attaches its browser instance to `window.Clerk` once ClerkProvider
+// mounts. The API client reads a session token from it (client-only) to
+// authenticate real backend calls. Minimal surface — just what we use.
+interface Window {
+  Clerk?: {
+    session?: {
+      getToken: (opts?: { template?: string }) => Promise<string | null>
+    }
+  }
+}
