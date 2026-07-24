@@ -4,8 +4,8 @@
 // after confirming time & location, publishes via the API shell — which routes
 // to the success step. Coordinates stay in MapTiler LngLat end to end.
 //
-// Layout mirrors the "发布实况" design. The thumbnail "+" is presentational
-// (single-image model for now).
+// Layout mirrors the "发布实况" design. A single image is allowed per post
+// (single-image model) — there is no add-more affordance.
 import { useState } from 'react'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import useSWR from 'swr'
@@ -74,7 +74,7 @@ export default function DetailStep() {
           <p className="mt-1 text-sm text-neutral-400">补齐可验证的花叶情报</p>
         </div>
 
-        {/* Thumbnails. Single-image model: the capture plus a presentational +. */}
+        {/* Thumbnail. Single-image model: exactly one capture, no add-more affordance. */}
         <div className="flex items-center gap-3">
           <span
             className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl"
@@ -83,9 +83,6 @@ export default function DetailStep() {
             {capture && (
               <img src={capture.dataUrl} alt="所拍照片" className="h-full w-full object-cover" />
             )}
-          </span>
-          <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-neutral-100 text-2xl text-neutral-400">
-            +
           </span>
         </div>
 
