@@ -44,7 +44,7 @@ interface SpeciesVO {
   coverImageId?: string
   /** 典型花期,二维数组 [[起始月,结束月],...];起始月>结束月表示跨年. */
   bloomMonths?: number[][]
-  /** Display period text, e.g. "3-4月". */
+  /** Display period text, e.g. "3-4 月". */
   bloomDisplay?: string
   /** Whether the species is in its viewing season (computed for the current month). */
   inSeason?: boolean

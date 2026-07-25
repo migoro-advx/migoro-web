@@ -3,7 +3,7 @@
 
 const MS_PER_DAY = 86_400_000
 
-/** "今天" / "昨天" / "N天前" / "N周前" for a date relative to now. */
+/** "今天" / "昨天" / "N 天前" / "N 周前" for a date relative to now. */
 export function relativeDay(date: Date): string {
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -11,13 +11,13 @@ export function relativeDay(date: Date): string {
   const daysBack = Math.round((today.getTime() - picked.getTime()) / MS_PER_DAY)
   if (daysBack <= 0) return '今天'
   if (daysBack === 1) return '昨天'
-  if (daysBack < 7) return `${daysBack}天前`
-  return `${Math.floor(daysBack / 7)}周前`
+  if (daysBack < 7) return `${daysBack} 天前`
+  return `${Math.floor(daysBack / 7)} 周前`
 }
 
-/** "M月D日". */
+/** "M 月 D 日". */
 export function monthDay(date: Date): string {
-  return `${date.getMonth() + 1}月${date.getDate()}日`
+  return `${date.getMonth() + 1} 月 ${date.getDate()} 日`
 }
 
 /** "HH:mm". */
@@ -26,9 +26,9 @@ export function hourMinute(date: Date): string {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
-/** "YYYY年M月D日 HH:mm" — the detail page's 实况记录 timestamps. */
+/** "YYYY 年 M 月 D 日 HH:mm" — the detail page's 实况记录 timestamps. */
 export function fullDate(date: Date): string {
-  return `${date.getFullYear()}年${monthDay(date)} ${hourMinute(date)}`
+  return `${date.getFullYear()} 年 ${monthDay(date)} ${hourMinute(date)}`
 }
 
 /** Distance as "1.2 km" or "320 m", or `null` when it cannot be computed. */

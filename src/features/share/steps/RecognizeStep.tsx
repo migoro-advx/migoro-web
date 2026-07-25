@@ -33,7 +33,7 @@ export default function RecognizeStep() {
     <div className="t-slide-in flex h-full flex-col bg-white">
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-[calc(env(safe-area-inset-top)+1rem)] pb-4">
         <h1 className="text-3xl font-bold text-ink">确认物种</h1>
-        <p className="mt-1 text-sm text-muted">AI只提供候选，需要你亲自确认</p>
+        <p className="mt-1 text-sm text-muted">AI 只提供候选，需要你亲自确认</p>
 
         {/* Captured photo. */}
         <div className="mt-5 aspect-[16/10] w-full overflow-hidden rounded-3xl bg-celadon">
@@ -79,7 +79,7 @@ export default function RecognizeStep() {
 
             {/* Other candidates + manual re-pick. */}
             <div className="mt-6 flex items-center justify-between">
-              <h2 className="text-base font-bold text-ink">其他候选</h2>
+              <h2 className="text-base font-bold text-ink">其它候选</h2>
               <button type="button" onClick={() => proceed(null)} className="text-sm text-muted">
                 重新选择
               </button>
@@ -100,7 +100,7 @@ export default function RecognizeStep() {
             </div>
 
             <div className="mt-5 rounded-2xl bg-ink/5 px-4 py-4 text-center text-xs text-muted">
-              低置信/识别失败：补拍花朵、叶片或手动选择
+              低置信／识别失败：补拍花朵、叶片或手动选择
             </div>
           </>
         )}

@@ -112,7 +112,7 @@ export default function SpeciesQuery() {
 
             {others.length > 0 && (
               <section className="mt-7">
-                <h2 className="text-lg font-bold text-ink">其他花卉</h2>
+                <h2 className="text-lg font-bold text-ink">其它花卉</h2>
                 <div className="mt-3 flex flex-col gap-3">
                   {others.map((s, i) => (
                     <OtherRow key={s.id} species={s} index={i} onPick={pick} />
@@ -128,7 +128,7 @@ export default function SpeciesQuery() {
                 className="mt-8 flex w-full items-center justify-between gap-3 rounded-3xl bg-peach px-5 py-4 text-left"
               >
                 <span className="text-sm font-medium text-accent">
-                  暂未收录这个名称 · 浏览其他花卉
+                  暂未收录这个名称 · 浏览其它花卉
                 </span>
                 <SproutMark className="h-10 w-10 shrink-0" />
               </button>

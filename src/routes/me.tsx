@@ -151,7 +151,7 @@ function FilterChip({
   )
 }
 
-/** 「已发布 · 梧桐公园」— non-public states read in accent as a heads-up. */
+/** “已发布 · 梧桐公园”— non-public states read in accent as a heads-up. */
 function StatusLine({ post }: { post: Post }) {
   const label = post.status ? POST_STATUS_LABEL[post.status] : undefined
   const text = [label, post.locationName].filter(Boolean).join(' · ')

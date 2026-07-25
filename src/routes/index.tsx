@@ -86,7 +86,7 @@ function Home() {
   const subtitle = selectedSpecies ? (
     displayCount > 0 ? (
       <>
-        {selectedSpecies.commonName} · <NumberFlow value={displayCount} suffix="条实况" />
+        {selectedSpecies.commonName} · <NumberFlow value={displayCount} suffix=" 条实况" />
       </>
     ) : (
       '暂无实况'
@@ -149,7 +149,7 @@ function Home() {
           <div className="t-rise-in mx-auto flex w-full max-w-md items-center gap-3 rounded-3xl bg-peach px-6 py-5 shadow-[0_10px_30px_rgba(214,138,95,.2)]">
             <div className="min-w-0 flex-1">
               <p className="text-base font-semibold text-ink">
-                这一天暂时没有「{selectedSpecies.commonName}」实况。
+                这一天暂时没有“{selectedSpecies.commonName}”实况。
               </p>
               <p className="mt-1.5 text-sm text-muted">换一天看看，或分享你在现场看到的样子。</p>
             </div>
@@ -170,15 +170,15 @@ function Home() {
           <NumberFlowGroup>
             <span>
               {daysBack >= 2 ? (
-                <NumberFlow value={daysBack} suffix="天前" />
+                <NumberFlow value={daysBack} suffix=" 天前" />
               ) : (
                 <span key={daysBack} className="t-swap-in">
                   {daysBack === 1 ? '昨天' : '今天'}
                 </span>
               )}
               {' · '}
-              <NumberFlow value={selectedDay.getMonth() + 1} suffix="月" />
-              <NumberFlow value={selectedDay.getDate()} suffix="日" />
+              <NumberFlow value={selectedDay.getMonth() + 1} suffix=" 月" />{' '}
+              <NumberFlow value={selectedDay.getDate()} suffix=" 日" />
             </span>
           </NumberFlowGroup>
         }

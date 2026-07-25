@@ -72,11 +72,11 @@ export interface TimeDialProps {
    */
   revealHeight?: string
   /**
-   * Prominent center label above the ticks (e.g. "今天 · 7月23日"). Rendered
+   * Prominent center label above the ticks (e.g. "今天 · 7 月 23 日"). Rendered
    * only after mount to avoid SSR/hydration mismatch on date-driven text.
    */
   label?: ReactNode
-  /** Secondary line under the label (e.g. "紫花鼠尾草 · 18条实况" / "暂无实况"). */
+  /** Secondary line under the label (e.g. "紫花鼠尾草 · 18 条实况" / "暂无实况"). */
   subtitle?: ReactNode
   /**
    * Distance from the viewport bottom (any CSS length). Lets callers lift the
@@ -366,7 +366,7 @@ export default function TimeDial({
             <div className="mt-1.5 text-sm whitespace-nowrap text-neutral-500">{subtitle}</div>
           )}
           <div className="mt-3 text-[11px] tracking-wide whitespace-nowrap text-neutral-400">
-            最近{maxDaysBack}天 · 每7天为一周
+            最近 {maxDaysBack} 天 · 每 7 天为一周
           </div>
         </div>
       )}

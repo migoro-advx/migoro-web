@@ -16,7 +16,7 @@ import {
 
 function formatMonthDay(iso: string): string {
   const d = new Date(iso)
-  return `${d.getMonth() + 1}月${d.getDate()}日`
+  return `${d.getMonth() + 1} 月 ${d.getDate()} 日`
 }
 
 // Petal burst trajectories — eight pure-CSS petal shapes (no SVG illustration)
@@ -33,7 +33,7 @@ const PETALS = [
   { x: -58, y: -6, angle: -60, color: 'var(--color-sage)' },
 ]
 
-/** Month/day + time, e.g. "7月23日 09:41" — used in the result card. */
+/** Month/day + time, e.g. "7 月 23 日 09:41" — used in the result card. */
 function formatMonthDayTime(iso: string): string {
   const d = new Date(iso)
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -120,7 +120,7 @@ export default function SuccessStep({ onClose }: { onClose: () => void }) {
           className="t-stagger-item mt-2 text-sm text-muted"
           style={{ '--i': 3 } as React.CSSProperties}
         >
-          已加入 {formatMonthDay(capture.meta.capturedAt)} 的地图实况
+          已加入 {formatMonthDay(capture.meta.capturedAt)}的地图实况
         </p>
       )}
 

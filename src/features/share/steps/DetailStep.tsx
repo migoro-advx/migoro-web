@@ -19,11 +19,11 @@ import {
   submitStateAtom,
 } from '#/features/share/state'
 
-/** Format an ISO capture time as e.g. "2026年7月23日 09:41". */
+/** Format an ISO capture time as e.g. "2026 年 7 月 23 日 09:41". */
 function formatCaptureTime(iso: string): string {
   const d = new Date(iso)
   const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  return `${d.getFullYear()} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日 ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 export default function DetailStep() {

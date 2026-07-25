@@ -17,7 +17,7 @@ export interface Species {
    * other Species consumers (e.g. recognition candidates) can omit it.
    */
   inSeason?: boolean
-  /** Display-ready period text, e.g. "花期 6-8月" / "观叶期 10-11月". */
+  /** Display-ready period text, e.g. "花期 6-8 月" / "观叶期 10-11 月". */
   periodLabel?: string
   /** Placeholder accent color for the card image (presentation hint only). */
   accentColor?: string

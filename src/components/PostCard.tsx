@@ -30,13 +30,16 @@ export default function PostCard({
 }: {
   post: Post
   speciesName: string
-  /** Optional third text row, e.g. 「已发布 · 梧桐公园」 on the profile page. */
+  /** Optional third text row, e.g. “已发布 · 梧桐公园” on the profile page. */
   statusLine?: ReactNode
   /** Grid position driving the staggered entrance (capped at 8 internally). */
   index?: number
   onOpen: () => void
 }) {
   const captured = new Date(post.capturedAt)
+  // Han–digit spacing: "拍摄于 3 天前" needs a joining space, "拍摄于今天" doesn't.
+  const capturedDay = relativeDay(captured)
+  const capturedDayGap = /^\d/.test(capturedDay) ? ' ' : ''
   return (
     <button
       type="button"
@@ -67,7 +70,8 @@ export default function PostCard({
       </div>
       <span className="mt-2 px-1 text-base font-semibold text-ink">{speciesName}</span>
       <span className="px-1 text-xs text-muted">
-        {post.bloomStage} · 拍摄于{relativeDay(captured)} {hourMinute(captured)}
+        {post.bloomStage} · 拍摄于{capturedDayGap}
+        {capturedDay} {hourMinute(captured)}
       </span>
       {statusLine != null && <span className="px-1 text-xs">{statusLine}</span>}
     </button>

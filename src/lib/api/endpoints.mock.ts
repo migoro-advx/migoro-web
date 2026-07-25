@@ -29,7 +29,7 @@ const MOCK_SPECIES: Species[] = [
     scientificName: 'Prunus serrulata',
     commonName: '樱花',
     inSeason: true,
-    periodLabel: '花期 3-4月',
+    periodLabel: '花期 3-4 月',
     accentColor: '#f7d3bf',
   },
   {
@@ -37,7 +37,7 @@ const MOCK_SPECIES: Species[] = [
     scientificName: 'Salvia nemorosa',
     commonName: '紫花鼠尾草',
     inSeason: true,
-    periodLabel: '花期 6-8月',
+    periodLabel: '花期 6-8 月',
     accentColor: '#DCECEF',
   },
   {
@@ -45,7 +45,7 @@ const MOCK_SPECIES: Species[] = [
     scientificName: 'Hydrangea macrophylla',
     commonName: '绣球',
     inSeason: true,
-    periodLabel: '花期 6-8月',
+    periodLabel: '花期 6-8 月',
     accentColor: '#f6ddcb',
   },
   // 其他花卉
@@ -54,7 +54,7 @@ const MOCK_SPECIES: Species[] = [
     scientificName: 'Ginkgo biloba',
     commonName: '银杏',
     inSeason: false,
-    periodLabel: '观叶期 10-11月',
+    periodLabel: '观叶期 10-11 月',
     accentColor: '#aebf94',
   },
   {
@@ -62,7 +62,7 @@ const MOCK_SPECIES: Species[] = [
     scientificName: 'Prunus mume',
     commonName: '梅花',
     inSeason: false,
-    periodLabel: '花期 1-3月',
+    periodLabel: '花期 1-3 月',
     accentColor: '#f6d3c0',
   },
   {
@@ -70,7 +70,7 @@ const MOCK_SPECIES: Species[] = [
     scientificName: 'Acer palmatum',
     commonName: '枫叶',
     inSeason: false,
-    periodLabel: '观叶期 10-12月',
+    periodLabel: '观叶期 10-12 月',
     accentColor: '#cfe0dd',
   },
 ]
