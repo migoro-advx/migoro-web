@@ -6,9 +6,9 @@
 // lazy from the route, mirroring ShareJourney.
 import { useEffect, useState } from 'react'
 import { useAtomValue, useSetAtom } from 'jotai'
-import { useUser } from '@clerk/tanstack-react-start'
 import useSWR from 'swr'
 
+import { useViewer } from '#/features/auth/guest'
 import { api } from '#/lib/api'
 import {
   captureAtom,
@@ -24,7 +24,7 @@ import LocationStep from '#/features/share/steps/LocationStep'
 import DetailStep from '#/features/share/steps/DetailStep'
 
 export default function EditJourney({ postId }: { postId: string }) {
-  const { user } = useUser()
+  const { userId } = useViewer()
   const step = useAtomValue(stepAtom)
   const setMode = useSetAtom(journeyModeAtom)
   const setCapture = useSetAtom(captureAtom)
@@ -39,7 +39,7 @@ export default function EditJourney({ postId }: { postId: string }) {
   // Same key as the detail page so both read one cache entry.
   const { data: post, error, isLoading } = useSWR(['post', postId], () => api.getPost(postId))
 
-  const isAuthor = Boolean(user?.id && post?.authorId && user.id === post.authorId)
+  const isAuthor = Boolean(userId && post?.authorId && userId === post.authorId)
 
   // Seed the journey atoms once from the loaded post, then leave the steps in
   // charge. The whole journey is cleared again on unmount so a later 发布

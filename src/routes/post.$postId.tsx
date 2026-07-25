@@ -3,13 +3,14 @@
 //
 // Layout follows the 我的帖子详情 mockup: a top bar (back / title / 编辑), the
 // photo hero, a white species card with a solid stage pill, and a peach
-// 实况记录 card of label/value rows. 编辑 renders only when the signed-in user
+// 实况记录 card of label/value rows. 编辑 renders only when the viewer
+// (signed-in user or guest — guests share the backend's `guest` identity)
 // authored the post, and links to the edit journey.
 import { Link, createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
-import { useUser } from '@clerk/tanstack-react-start'
 import useSWR from 'swr'
 
 import BackButton from '#/components/BackButton'
+import { useViewer } from '#/features/auth/guest'
 import { api, POST_STATUS_LABEL } from '#/lib/api'
 import { fullDate } from '#/features/places/format'
 
@@ -24,11 +25,11 @@ function PostDetail() {
   const { postId } = Route.useParams()
   const router = useRouter()
   const navigate = useNavigate()
-  const { user } = useUser()
+  const { userId } = useViewer()
 
   const { data: post, error, isLoading } = useSWR(['post', postId], () => api.getPost(postId))
 
-  const isAuthor = Boolean(user?.id && post?.authorId && user.id === post.authorId)
+  const isAuthor = Boolean(userId && post?.authorId && userId === post.authorId)
   const locationText =
     post?.locationName ?? [post?.place.parkName, post?.place.areaName].filter(Boolean).join(' · ')
 

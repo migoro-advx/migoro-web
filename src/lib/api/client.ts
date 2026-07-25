@@ -1,6 +1,8 @@
 // Minimal fetch wrapper — the single place real network calls land. Requests
-// carry the Clerk session token (Bearer) when one is available; the mock
-// implementation (see index.ts) bypasses this entirely.
+// carry the Clerk session token (Bearer) when one is available, fall back to
+// the bare `Guest` credential in guest mode, and are anonymous otherwise; the
+// mock implementation (see index.ts) bypasses this entirely.
+import { isGuestMode } from '#/features/auth/guest'
 
 export const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
@@ -50,12 +52,15 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
 
   const isPlainBody = body != null && !(body instanceof FormData) && !(body instanceof Blob)
   const token = await getAuthToken()
+  // A real session always wins over guest mode; `Guest` is the whole header
+  // value (no Bearer prefix) — the backend's undocumented guest credential.
+  const authorization = token ? `Bearer ${token}` : isGuestMode() ? 'Guest' : undefined
 
   const response = await fetch(`${BASE_URL}${path}`, {
     ...rest,
     headers: {
       ...(isPlainBody ? { 'Content-Type': 'application/json' } : {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(authorization ? { Authorization: authorization } : {}),
       ...headers,
     },
     body: isPlainBody ? JSON.stringify(body) : (body as BodyInit | undefined),

@@ -1,19 +1,24 @@
 // 个人主页 — the signed-in user's own posts (我的帖子) across every status
 // (已发布 / 已隐藏 / 已删除), newest first. Login-gated in place like /share:
-// signed-out visitors see the AuthOverlay card and proceed once authenticated.
+// signed-out visitors see the AuthOverlay card and proceed once authenticated
+// or after choosing 以访客身份继续 (guests share the backend's `guest`
+// identity, so 我的帖子 shows every guest-authored post).
 //
 // Per the design alignment: no avatar/nickname header — only the 设置 action
-// (opens Clerk's account modal). The mockup's 待同步/审核中/草稿 states are mock
+// (opens Clerk's account modal; guests get 退出访客模式 instead). The
+// mockup's 待同步/审核中/草稿 states are mock
 // artifacts and are intentionally not replicated; only backend statuses show.
 import { useState } from 'react'
 import { ClientOnly, createFileRoute, useNavigate } from '@tanstack/react-router'
-import { Show, useClerk, useUser } from '@clerk/tanstack-react-start'
+import { useClerk } from '@clerk/tanstack-react-start'
+import { useSetAtom } from 'jotai'
 import useSWR from 'swr'
 import NumberFlow from '@number-flow/react'
 
-import { AuthOverlay } from '#/components/AuthOverlay'
+import { AuthGate, AuthOverlay } from '#/components/AuthOverlay'
 import BottomNav, { NAV_OFFSET } from '#/components/BottomNav'
 import PostCard from '#/components/PostCard'
+import { guestModeAtom, useViewer } from '#/features/auth/guest'
 import { POST_STATUS_LABEL, api } from '#/lib/api'
 import type { Post } from '#/lib/api'
 
@@ -22,24 +27,24 @@ export const Route = createFileRoute('/me')({ component: MePage })
 function MePage() {
   return (
     <ClientOnly fallback={null}>
-      <Show when="signed-in">
+      <AuthGate>
         <MyPosts />
-      </Show>
+      </AuthGate>
       <AuthOverlay />
     </ClientOnly>
   )
 }
 
 function MyPosts() {
-  const { user } = useUser()
+  const { status, userId } = useViewer()
   const clerk = useClerk()
+  const setGuest = useSetAtom(guestModeAtom)
   const navigate = useNavigate()
 
   // `null` = 全部; otherwise a speciesId. Local state only — the filter is a
   // view refinement, not a shareable location.
   const [speciesFilter, setSpeciesFilter] = useState<string | null>(null)
 
-  const userId = user?.id
   const { data: posts, isLoading } = useSWR(userId ? ['myPosts', userId] : null, () =>
     api.listMyPosts(userId!),
   )
@@ -62,15 +67,27 @@ function MyPosts() {
         className="mx-auto w-full max-w-md px-5 pt-[calc(env(safe-area-inset-top)+1rem)]"
         style={{ paddingBottom: `calc(${NAV_OFFSET} + 2rem)` }}
       >
-        {/* 设置 — Clerk's account management modal (avatar / name / sign out). */}
+        {/* 设置 — Clerk's account management modal (avatar / name / sign out).
+            Guests have no Clerk account; they get 退出访客模式, which clears
+            the guest flag and lands back on the auth overlay. */}
         <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={() => clerk.openUserProfile()}
-            className="py-2 text-sm text-muted"
-          >
-            设置
-          </button>
+          {status === 'guest' ? (
+            <button
+              type="button"
+              onClick={() => setGuest(false)}
+              className="py-2 text-sm text-muted"
+            >
+              退出访客模式
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => clerk.openUserProfile()}
+              className="py-2 text-sm text-muted"
+            >
+              设置
+            </button>
+          )}
         </div>
 
         {/* Species filter chips — 全部 + per-species counts. */}
