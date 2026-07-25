@@ -45,6 +45,11 @@ const DIAL_ACCENT = COLORS.accent // apex pointer (orange)
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
+/** Local start-of-day (00:00) for a Date, so day math ignores time-of-day. */
+function startOfDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
 /** Days between two dates, ignoring intra-day time (positive when `later` is newer). */
 function daysBetween(later: Date, earlier: Date): number {
   return Math.round((later.getTime() - earlier.getTime()) / MS_PER_DAY)
@@ -97,9 +102,12 @@ export default function TimeDial({
   subtitle,
   bottomOffset = '0px',
 }: TimeDialProps) {
-  // Seed "now" once so the reference date is stable across renders. Date-driven
-  // output (labels, onChange) is gated behind `mounted` to avoid SSR mismatch.
-  const [now] = useState(() => maxDate ?? new Date())
+  // Seed "now" once so the reference date is stable across renders, normalized
+  // to local midnight so day math is calendar-day based (a raw timestamp past
+  // noon would round a midnight `value` to 1 day back — opening on yesterday).
+  // Date-driven output (labels, onChange) is gated behind `mounted` to avoid
+  // SSR mismatch.
+  const [now] = useState(() => startOfDay(maxDate ?? new Date()))
   const [mounted, setMounted] = useState(false)
 
   const maxAngle = maxAngleDeg ?? maxDaysBack * DEG_PER_DAY
@@ -164,7 +172,9 @@ export default function TimeDial({
     const daysBack = Math.round(rotation / DEG_PER_DAY)
     if (emittedDaysRef.current === daysBack) return
     emittedDaysRef.current = daysBack
-    onChange?.(new Date(now.getTime() - daysBack * MS_PER_DAY))
+    // Calendar arithmetic (not fixed 24h multiples) so DST transitions inside
+    // the window can't shift the emitted date off its midnight.
+    onChange?.(new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysBack))
   }, [rotation, mounted, now, onChange])
 
   const nearestDetent = useCallback(
