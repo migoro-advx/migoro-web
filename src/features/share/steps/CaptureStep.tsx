@@ -125,9 +125,16 @@ export default function CaptureStep({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="t-slide-in flex h-full flex-col bg-black text-white">
-      {/* Top bar. Minimal ✕ close placeholder — to be restyled later. */}
-      <div className="flex items-center px-5 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3">
-        <button type="button" onClick={onClose} aria-label="关闭" className="text-lg leading-none">
+      {/* Top bar. ✕ close keeps its glyph (close, not back) but shares the
+          canonical back-button geometry: safe-area + 1rem top, px-5 + -ml-2
+          left, 36px round hit area — same screen spot as ‹ on other pages. */}
+      <div className="flex items-center px-5 pt-[calc(env(safe-area-inset-top)+1rem)] pb-3">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="关闭"
+          className="-ml-2 flex h-9 w-9 items-center justify-center rounded-full text-2xl leading-none"
+        >
           ✕
         </button>
       </div>

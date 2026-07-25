@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react'
 import { useSetAtom } from 'jotai'
 import useSWR from 'swr'
 
+import BackButton from '#/components/BackButton'
 import BottomNav, { NAV_OFFSET } from '#/components/BottomNav'
 import { SproutMark } from '#/brand/illustrations'
 import { api } from '#/lib/api'
@@ -63,15 +64,12 @@ export default function SpeciesQuery() {
         style={{ paddingBottom: `calc(${NAV_OFFSET} + 2rem)` }}
       >
         {/* Back control — connective affordance until the global bottom nav
-            (地图/拍摄/我的) lands; then this can be removed. */}
-        <button
-          type="button"
-          onClick={() => setOpen(false)}
-          aria-label="返回"
-          className="-ml-2 mb-2 flex h-9 w-9 items-center justify-center rounded-full text-2xl text-muted"
-        >
-          <span aria-hidden>‹</span>
-        </button>
+            (地图/拍摄/我的) lands; then this can be removed. The -ml-1 wrapper
+            compensates this page's wider px-6 gutter so the arrow lands at the
+            same screen x as the px-5 pages. */}
+        <div className="-ml-1 mb-2">
+          <BackButton onClick={() => setOpen(false)} />
+        </div>
 
         <h1 className="text-4xl font-bold text-accent">选择花卉</h1>
         <p className="mt-1 text-sm text-muted">从平台收录的花叶物种中选择</p>

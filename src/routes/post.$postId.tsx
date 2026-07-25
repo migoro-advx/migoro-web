@@ -9,6 +9,7 @@ import { Link, createFileRoute, useNavigate, useRouter } from '@tanstack/react-r
 import { useUser } from '@clerk/tanstack-react-start'
 import useSWR from 'swr'
 
+import BackButton from '#/components/BackButton'
 import { api, POST_STATUS_LABEL } from '#/lib/api'
 import { fullDate } from '#/features/places/format'
 
@@ -34,18 +35,14 @@ function PostDetail() {
   return (
     <div className="fixed inset-0 flex flex-col overflow-y-auto bg-white">
       <div className="mx-auto w-full max-w-md px-5 pb-[calc(env(safe-area-inset-bottom)+2rem)] pt-[calc(env(safe-area-inset-top)+1rem)]">
-        {/* Top bar — back / centered title / 编辑 (author only). */}
-        <div className="relative flex h-11 items-center justify-between">
-          <button
-            type="button"
-            aria-label="返回"
+        {/* Top bar — back / centered title / 编辑 (author only). The row is h-9
+            so the back button sits exactly at safe-area + 1rem like every page. */}
+        <div className="relative flex h-9 items-center justify-between">
+          <BackButton
             onClick={() =>
               router.history.canGoBack() ? router.history.back() : navigate({ to: '/' })
             }
-            className="-ml-2 flex h-9 w-9 items-center justify-center rounded-full text-2xl text-ink"
-          >
-            <span aria-hidden>‹</span>
-          </button>
+          />
           <h1 className="absolute left-1/2 -translate-x-1/2 text-lg font-bold text-ink">
             帖子详情
           </h1>

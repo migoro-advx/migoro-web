@@ -7,10 +7,11 @@
 // species filter is active only that species shows, otherwise all species. The
 // mockup's multi-day labels are a mock artifact and are intentionally not
 // replicated — every card belongs to the selected day.
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAtomValue } from 'jotai'
 import useSWR from 'swr'
 
+import BackButton from '#/components/BackButton'
 import BottomNav, { NAV_OFFSET } from '#/components/BottomNav'
 import PostCard from '#/components/PostCard'
 import { api } from '#/lib/api'
@@ -54,13 +55,7 @@ function PlaceWaterfall() {
         className="mx-auto w-full max-w-md px-5 pt-[calc(env(safe-area-inset-top)+1rem)]"
         style={{ paddingBottom: `calc(${NAV_OFFSET} + 2rem)` }}
       >
-        <Link
-          to="/"
-          aria-label="返回地图"
-          className="-ml-2 mb-2 flex h-9 w-9 items-center justify-center rounded-full text-2xl text-muted"
-        >
-          <span aria-hidden>‹</span>
-        </Link>
+        <BackButton to="/" aria-label="返回地图" className="mb-2" />
 
         <h1 className="text-3xl font-bold text-ink">{summary?.place.parkName ?? '地点'}</h1>
         <p className="mt-1 text-sm text-muted">

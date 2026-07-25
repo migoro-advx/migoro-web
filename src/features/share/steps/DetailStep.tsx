@@ -15,6 +15,7 @@ import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { useNavigate, useRouter } from '@tanstack/react-router'
 import useSWR, { mutate } from 'swr'
 
+import BackButton from '#/components/BackButton'
 import { BLOOM_STAGES, api } from '#/lib/api'
 import {
   captureAtom,
@@ -101,16 +102,7 @@ export default function DetailStep() {
         {/* Edit mode arrives from the post detail page, so it needs a way back;
             create mode's steps own their own close/back affordances. */}
         <div className="flex items-center gap-2">
-          {isEdit && (
-            <button
-              type="button"
-              aria-label="返回"
-              onClick={() => exitToDetail(mode.postId)}
-              className="-ml-2 flex h-9 w-9 items-center justify-center rounded-full text-2xl text-ink"
-            >
-              <span aria-hidden>‹</span>
-            </button>
-          )}
+          {isEdit && <BackButton onClick={() => exitToDetail(mode.postId)} />}
           <h1 className="text-3xl font-bold text-ink">{isEdit ? '编辑帖子' : '发布实况'}</h1>
         </div>
 
