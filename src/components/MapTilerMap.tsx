@@ -96,7 +96,7 @@ export default function MapTilerMap({
 
       const mapInstance = new Map({
         container,
-        style: MapStyle.STREETS,
+        style: MapStyle.BRIGHT.PASTEL,
         language: Language.SIMPLIFIED_CHINESE,
         navigationControl: 'bottom-right',
         geolocateControl: false,

@@ -37,7 +37,7 @@ export default function LocationPickerMap({
 
     const map = new Map({
       container: containerRef.current,
-      style: MapStyle.STREETS,
+      style: MapStyle.BRIGHT.PASTEL,
       language: Language.SIMPLIFIED_CHINESE,
       navigationControl: 'bottom-right',
       geolocateControl: false,
