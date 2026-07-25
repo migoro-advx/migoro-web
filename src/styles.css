@@ -35,6 +35,17 @@ body {
   margin: 0;
 }
 
+/* MapTiler bottom-right control corner (zoom / compass / locate + attribution).
+   Callers lift it above bottom-anchored UI (TimeDial dome, bottom nav) by
+   setting --map-ctrl-bottom on the map wrapper (see MapTilerMap's
+   controlsBottomOffset prop); other maps keep the default corner.
+   The .maplibregl-map ancestor is required: the SDK's own stylesheet ships in
+   the lazily loaded map chunk, so its `bottom: 0` rule lands after this file —
+   the extra class out-specifies it regardless of CSS load order. */
+.maplibregl-map .maplibregl-ctrl-bottom-right {
+  bottom: var(--map-ctrl-bottom, 0px);
+}
+
 /* ============================== Motion ===================================
    transitions.dev motion-token subset + the site's reusable enter-only
    animations. Mobile-first: tap feedback, entrances, and loading motion only

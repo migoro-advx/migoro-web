@@ -97,7 +97,7 @@ function Home() {
     <div className="fixed inset-0">
       <ClientOnly fallback={null}>
         <Suspense fallback={null}>
-          <MapTilerMap>
+          <MapTilerMap controlsBottomOffset={`calc(${NAV_OFFSET} + ${DIAL_REVEAL} + 0.75rem)`}>
             <SightingsMarkers />
           </MapTilerMap>
         </Suspense>

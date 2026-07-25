@@ -8,7 +8,7 @@
 // is always the map center. Dragging the map moves the center under the pin and
 // reports the new coordinate on `moveend`.
 import { useEffect, useRef } from 'react'
-import { Map, MapStyle, Language, config } from '@maptiler/sdk'
+import { GeolocateControl, Map, MapStyle, Language, config } from '@maptiler/sdk'
 import '@maptiler/sdk/dist/maptiler-sdk.css'
 
 import type { LngLat } from '#/lib/api'
@@ -39,10 +39,32 @@ export default function LocationPickerMap({
       container: containerRef.current,
       style: MapStyle.STREETS,
       language: Language.SIMPLIFIED_CHINESE,
+      navigationControl: 'bottom-right',
       geolocateControl: false,
       ...(initialCenterRef.current ? { center: initialCenterRef.current, zoom: LOCATE_ZOOM } : {}),
     })
     mapRef.current = map
+
+    // On-demand "回到当前位置" — mirrors MapTilerMap's locate control: snap
+    // (never fly) and reuse a recent fix. The geolocate move is programmatic
+    // (no originalEvent), so the moveend handler below won't report it —
+    // instead the control's own event feeds the new point into the form.
+    const geolocate = new GeolocateControl({
+      positionOptions: {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000,
+      },
+      fitBoundsOptions: { maxZoom: LOCATE_ZOOM, animate: false },
+      trackUserLocation: false,
+      showUserLocation: true,
+      showAccuracyCircle: true,
+    })
+    map.addControl(geolocate, 'bottom-right')
+    geolocate.on('error', e => console.warn('Geolocation failed:', e?.message ?? e))
+    geolocate.on('geolocate', pos => {
+      onCenterChangeRef.current([pos.coords.longitude, pos.coords.latitude])
+    })
 
     // Only report user-driven moves (drag / zoom). Programmatic moves and the
     // initial viewport settle have no `originalEvent`, so we skip them —

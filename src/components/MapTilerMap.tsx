@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { GeolocateControl, Language, Map, MapStyle, config } from '@maptiler/sdk'
 import { useSetAtom } from 'jotai'
 import '@maptiler/sdk/dist/maptiler-sdk.css'
@@ -43,7 +43,18 @@ function getUserPosition(): Promise<GeolocationPosition | null> {
   })
 }
 
-export default function MapTilerMap({ children }: { children?: ReactNode }) {
+export default function MapTilerMap({
+  children,
+  controlsBottomOffset,
+}: {
+  children?: ReactNode
+  /**
+   * Lifts the bottom-right control corner (zoom / compass / locate) above
+   * bottom-anchored UI such as the TimeDial dome. Any CSS length; applied via
+   * the `--map-ctrl-bottom` variable (see styles.css).
+   */
+  controlsBottomOffset?: string
+}) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<Map | null>(null)
   const [map, setMap] = useState<Map | null>(null)
@@ -87,6 +98,7 @@ export default function MapTilerMap({ children }: { children?: ReactNode }) {
         container,
         style: MapStyle.STREETS,
         language: Language.SIMPLIFIED_CHINESE,
+        navigationControl: 'bottom-right',
         geolocateControl: false,
         ...(position
           ? {
@@ -111,7 +123,7 @@ export default function MapTilerMap({ children }: { children?: ReactNode }) {
         showUserLocation: true,
         showAccuracyCircle: true,
       })
-      mapInstance.addControl(geolocate)
+      mapInstance.addControl(geolocate, 'bottom-right')
       geolocate.on('error', e => console.warn('Geolocation failed:', e?.message ?? e))
       mapInstance.on('load', () => {
         if (cancelled) return
@@ -135,7 +147,15 @@ export default function MapTilerMap({ children }: { children?: ReactNode }) {
   }, [setPlaceName, setMapBounds])
 
   return (
-    <div ref={containerRef} className="h-full w-full">
+    <div
+      ref={containerRef}
+      className="h-full w-full"
+      style={
+        controlsBottomOffset
+          ? ({ '--map-ctrl-bottom': controlsBottomOffset } as CSSProperties)
+          : undefined
+      }
+    >
       <MapContext.Provider value={map}>{children}</MapContext.Provider>
     </div>
   )
