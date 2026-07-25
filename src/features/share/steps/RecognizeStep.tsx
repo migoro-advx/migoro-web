@@ -6,7 +6,7 @@
 //
 // Layout mirrors the "确认物种" design.
 import { useState } from 'react'
-import { useAtomValue, useSetAtom } from 'jotai'
+import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 
 import type { Species } from '#/lib/api'
 import { captureAtom, selectedSpeciesAtom, stepAtom } from '#/features/share/state'
@@ -15,12 +15,18 @@ import { BloomMark } from '#/brand/illustrations'
 
 export default function RecognizeStep() {
   const capture = useAtomValue(captureAtom)
-  const setSelectedSpecies = useSetAtom(selectedSpeciesAtom)
+  const [selectedSpecies, setSelectedSpecies] = useAtom(selectedSpeciesAtom)
   const setStep = useSetAtom(stepAtom)
   const { candidates, isLoading, error, retry } = useRecognition(capture?.dataUrl ?? null)
 
-  // Which candidate currently sits in the primary slot. Defaults to the top one.
-  const [chosenIndex, setChosenIndex] = useState(0)
+  // Which candidate currently sits in the primary slot. Defaults to the top
+  // one; on re-entry (via 重选物种) re-seat the previously confirmed species so
+  // the card matches the stored selection — candidates are SWR-cached by data
+  // URL, so they're already present on the first render of a revisit.
+  const [chosenIndex, setChosenIndex] = useState(() => {
+    const i = candidates.findIndex(c => c.species.id === selectedSpecies?.id)
+    return i >= 0 ? i : 0
+  })
   const chosen: Species | undefined = candidates.at(chosenIndex)?.species
   const others = candidates.filter((_, i) => i !== chosenIndex)
 

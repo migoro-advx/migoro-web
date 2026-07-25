@@ -225,16 +225,37 @@ export default function DetailStep() {
         )}
       </div>
 
-      {/* Bottom action: 发布实况 / 保存修改. */}
-      <div className="flex items-center gap-3 px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
-        <button
-          type="submit"
-          disabled={submitting || !confirmed}
-          className="mx-auto rounded-full bg-ink px-16 py-3 text-sm text-white t-press disabled:opacity-40"
-        >
-          {isEdit ? (submitting ? '保存中…' : '保存修改') : submitting ? '发布中…' : '发布实况'}
-        </button>
-      </div>
+      {/* Bottom actions. Create mode pairs 调整位置 with 发布实况 (same bar as
+          RecognizeStep's 重拍 | 继续); edit mode keeps the single centered
+          保存修改 — its back affordance lives in the header. */}
+      {isEdit ? (
+        <div className="flex items-center gap-3 px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+          <button
+            type="submit"
+            disabled={submitting || !confirmed}
+            className="mx-auto rounded-full bg-ink px-16 py-3 text-sm text-white t-press disabled:opacity-40"
+          >
+            {submitting ? '保存中…' : '保存修改'}
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+          <button
+            type="button"
+            onClick={() => setStep('location')}
+            className="w-full rounded-full bg-ink/5 py-3.5 text-sm text-ink t-press"
+          >
+            调整位置
+          </button>
+          <button
+            type="submit"
+            disabled={submitting || !confirmed}
+            className="w-full rounded-full bg-ink py-3.5 text-sm text-white t-press disabled:opacity-40"
+          >
+            {submitting ? '发布中…' : '发布实况'}
+          </button>
+        </div>
+      )}
     </form>
   )
 }

@@ -12,11 +12,18 @@ import useSWR from 'swr'
 
 import type { LngLat } from '#/lib/api'
 import { reverseGeocode } from '#/lib/geocoding'
-import { captureAtom, formAtom, locationEditedAtom, stepAtom } from '#/features/share/state'
+import {
+  captureAtom,
+  formAtom,
+  journeyModeAtom,
+  locationEditedAtom,
+  stepAtom,
+} from '#/features/share/state'
 
 const LocationPickerMap = lazy(() => import('#/features/share/LocationPickerMap'))
 
 export default function LocationStep() {
+  const mode = useAtomValue(journeyModeAtom)
   const capture = useAtomValue(captureAtom)
   const [form, setForm] = useAtom(formAtom)
   const setStep = useSetAtom(stepAtom)
@@ -118,13 +125,35 @@ export default function LocationStep() {
           · 敏感地点将自动保护公开坐标
         </div>
 
-        <button
-          type="button"
-          onClick={() => setStep('detail')}
-          className="w-full rounded-full bg-ink px-8 py-3 text-sm text-white t-press"
-        >
-          确认位置
-        </button>
+        {/* Bottom actions. Create mode gets the shared 返回 | 前进 pair (see
+            RecognizeStep's 重拍 | 继续); edit mode has no recognize step to go
+            back to, so it keeps the single full-width confirm. */}
+        {mode.kind === 'create' ? (
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setStep('recognize')}
+              className="w-full rounded-full bg-ink/5 py-3.5 text-sm text-ink t-press"
+            >
+              重选物种
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep('detail')}
+              className="w-full rounded-full bg-ink py-3.5 text-sm text-white t-press"
+            >
+              确认位置
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setStep('detail')}
+            className="w-full rounded-full bg-ink px-8 py-3 text-sm text-white t-press"
+          >
+            确认位置
+          </button>
+        )}
       </div>
     </div>
   )
