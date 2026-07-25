@@ -74,7 +74,7 @@ export default function BottomNav() {
         <Link
           to="/"
           aria-label="地图"
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-sage text-white t-press"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-celadon text-accent t-press"
         >
           <LocateIcon />
         </Link>
@@ -92,7 +92,7 @@ export default function BottomNav() {
         <Link
           to="/me"
           aria-label="我的"
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-sage text-white t-press"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-celadon text-accent t-press"
         >
           <ProfileIcon />
         </Link>
