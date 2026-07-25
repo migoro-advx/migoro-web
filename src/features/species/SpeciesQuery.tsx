@@ -10,9 +10,10 @@ import { useSetAtom } from 'jotai'
 import useSWR from 'swr'
 
 import BottomNav, { NAV_OFFSET } from '#/components/BottomNav'
-import { SpeciesFlower, SproutMark } from '#/brand/illustrations'
+import { SproutMark } from '#/brand/illustrations'
 import { api } from '#/lib/api'
 import type { Species } from '#/lib/api'
+import SeasonFan from './SeasonFan'
 import { queryOpenAtom, selectedSpeciesAtom } from './state'
 
 // Fallback accent color when a species has no `accentColor` (real backend may
@@ -56,7 +57,7 @@ export default function SpeciesQuery() {
   }
 
   return (
-    <div className="t-panel-in fixed inset-0 z-50 flex flex-col overflow-y-auto bg-white">
+    <div className="t-panel-in fixed inset-0 z-50 flex flex-col overflow-x-clip overflow-y-auto bg-white">
       <div
         className="mx-auto w-full max-w-md px-6 pt-[calc(env(safe-area-inset-top)+1rem)]"
         style={{ paddingBottom: `calc(${NAV_OFFSET} + 2rem)` }}
@@ -96,16 +97,8 @@ export default function SpeciesQuery() {
             {inSeason.length > 0 && (
               <section className="mt-7">
                 <h2 className="text-lg font-bold text-ink">当前花期</h2>
-                <div className="mt-4 flex justify-center">
-                  {inSeason.map((s, i) => (
-                    <SeasonCard
-                      key={s.id}
-                      species={s}
-                      index={i}
-                      total={inSeason.length}
-                      onPick={pick}
-                    />
-                  ))}
+                <div className="mt-4">
+                  <SeasonFan species={inSeason} onPick={pick} />
                 </div>
               </section>
             )}
@@ -139,46 +132,6 @@ export default function SpeciesQuery() {
 
       <BottomNav />
     </div>
-  )
-}
-
-function SeasonCard({
-  species,
-  index,
-  total,
-  onPick,
-}: {
-  species: Species
-  index: number
-  total: number
-  onPick: (s: Species) => void
-}) {
-  // Decorative fan: edges tilt outward, the middle card sits straight and
-  // raised, and neighbors overlap slightly — matching the mockup's card stack.
-  const mid = (total - 1) / 2
-  const rotate = (index - mid) * 6
-  const raised = Math.abs(index - mid) < 0.5
-  const style: React.CSSProperties = {
-    transform: `rotate(${rotate}deg) translateY(${raised ? -10 : 8}px)`,
-    zIndex: raised ? 20 : 10,
-    marginLeft: index === 0 ? 0 : -12,
-    '--i': index,
-  } as React.CSSProperties
-  return (
-    <button
-      type="button"
-      onClick={() => onPick(species)}
-      style={style}
-      className="t-stagger-item flex w-[34%] flex-col rounded-3xl bg-white p-2 text-left shadow-[0_8px_24px_rgba(214,138,95,.18)] ring-1 ring-black/5 t-press"
-    >
-      <span className="flex w-full items-center justify-center">
-        <SpeciesFlower index={index} className="w-full block" />
-      </span>
-      <span className="mt-2 px-1 text-sm font-semibold text-ink">{species.commonName}</span>
-      {species.periodLabel && (
-        <span className="px-1 pb-1 text-xs text-muted">{species.periodLabel}</span>
-      )}
-    </button>
   )
 }
 
