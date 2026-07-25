@@ -82,7 +82,13 @@ export default function SuccessStep({ onClose }: { onClose: () => void }) {
           data-state="in"
           style={{ '--i': 1 } as React.CSSProperties}
         >
-          <svg width="25" height="19" viewBox="0 0 25 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg
+            width="25"
+            height="19"
+            viewBox="0 0 25 19"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
             <path
               d="M2 10l7 7L23 2"
               stroke="currentColor"

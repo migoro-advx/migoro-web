@@ -51,10 +51,7 @@ export default function PostCard({
     >
       <div className="overflow-hidden rounded-3xl bg-white shadow-[0_8px_24px_rgba(0,0,0,.08)] ring-1 ring-black/5">
         {/* Id-seeded palette strip + photo over the brand placeholder. */}
-        <div
-          className="h-2 w-full"
-          style={{ backgroundColor: stripColorFor(post.id) }}
-        />
+        <div className="h-2 w-full" style={{ backgroundColor: stripColorFor(post.id) }} />
         <div className="aspect-[4/3] w-full bg-celadon">
           {post.imageUrl && (
             <img

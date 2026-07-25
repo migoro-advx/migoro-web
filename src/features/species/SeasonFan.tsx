@@ -87,10 +87,7 @@ export default function SeasonFan({
     return () => mq.removeEventListener('change', onChangeMq)
   }, [])
 
-  const nearestDetent = useCallback(
-    (o: number) => clamp(Math.round(o), 0, maxOffset),
-    [maxOffset],
-  )
+  const nearestDetent = useCallback((o: number) => clamp(Math.round(o), 0, maxOffset), [maxOffset])
 
   const stopPhysics = useCallback(() => {
     if (rafRef.current !== null) {

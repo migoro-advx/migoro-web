@@ -1,20 +1,29 @@
 import { Show, SignInButton, SignUpButton } from '@clerk/tanstack-react-start'
 
-import { BRAND_NAME, BrandLogo } from '#/brand'
+import { BrandLogo } from '#/brand'
 
 export function AuthOverlay() {
   return (
     <>
       <Show when="signed-out">
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="t-modal-in flex w-full flex-col items-center gap-6 bg-white/95 px-6 py-8 text-center shadow-2xl ring-1 ring-black/5">
-            <BrandLogo className="h-16 w-16" />
-            <h1 className="text-3xl font-semibold tracking-wide text-gray-900">{BRAND_NAME}</h1>
-            <div className="flex w-full flex-col gap-3">
+          <div className="t-modal-in mx-6 flex w-full max-w-xs flex-col items-center gap-6 rounded-3xl bg-white px-6 py-7 text-center shadow-[0_8px_24px_rgba(214,138,95,.18)] ring-1 ring-black/5">
+            <img src="/logotype.svg" className="h-10 mb-2 mt-2" role="img" aria-label="見頃" />{' '}
+            <div className="flex w-full flex-col gap-2">
+              {/* Strongest emphasis — demo visitors should tap this first.
+                  TODO: guest mode — wire up 以访客身份继续 (dismiss the overlay
+                  and browse without an account) once the feature lands. */}
+              <button
+                type="button"
+                className="w-full rounded-full bg-accent py-3 text-sm font-medium text-white t-press"
+              >
+                以访客身份继续
+              </button>
+              {/* Secondary emphasis — brand celadon pill. */}
               <SignUpButton mode="modal">
                 <button
                   type="button"
-                  className="w-full rounded-full border border-gray-300 bg-white px-4 py-2.5 font-medium text-gray-900 t-press hover:bg-gray-50"
+                  className="w-full rounded-full bg-celadon py-3 text-sm text-ink t-press"
                 >
                   创建账户
                 </button>
@@ -22,7 +31,7 @@ export function AuthOverlay() {
               <SignInButton mode="modal">
                 <button
                   type="button"
-                  className="w-full rounded-full bg-blue-600 px-4 py-2.5 font-medium text-white t-press hover:bg-blue-700"
+                  className="w-full rounded-full bg-ink/5 py-3 text-sm text-ink t-press"
                 >
                   登录
                 </button>
