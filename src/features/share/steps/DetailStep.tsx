@@ -52,6 +52,17 @@ export default function DetailStep() {
   const submitting = submitState.status === 'pending'
   const locationSummary = [form.locationName, form.areaName].filter(Boolean).join(' · ')
 
+  // Required-field validation. Every field marked * must be complete before
+  // publish/save: the domain model's Post.speciesId/bloomStage are non-null,
+  // so a submit with gaps would create broken data. Whitespace-only place
+  // names count as missing (trimmed again when building the payload).
+  const missingFields = [
+    !selectedSpecies && '物种',
+    !form.bloomStage && '观赏状态',
+    (form.locationName.trim() === '' || !form.coords) && '具体点位',
+  ].filter((f): f is string => Boolean(f))
+  const formValid = missingFields.length === 0
+
   /**
    * Leave the edit journey back to the post detail page. The normal entry is
    * detail -> edit (push), so going back keeps the history stack clean — a
@@ -65,14 +76,16 @@ export default function DetailStep() {
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
-    if (submitting || !capture || !confirmed) return
+    // Re-check validity here too: an implicit form submission (e.g. Enter)
+    // could bypass the disabled button.
+    if (submitting || !capture || !confirmed || !formValid) return
     setSubmitState({ status: 'pending' })
     try {
       if (mode.kind === 'edit') {
         await api.updatePost(mode.postId, {
           speciesId: selectedSpecies?.id ?? null,
           bloomStage: form.bloomStage,
-          location: { name: form.locationName, coords: form.coords },
+          location: { name: form.locationName.trim(), coords: form.coords },
         })
         // Refresh the detail page's cache before landing back on it.
         await mutate(['post', mode.postId])
@@ -83,7 +96,7 @@ export default function DetailStep() {
           capturedAt: capture.meta.capturedAt,
           speciesId: selectedSpecies?.id ?? null,
           bloomStage: form.bloomStage,
-          location: { name: form.locationName, coords: form.coords },
+          location: { name: form.locationName.trim(), coords: form.coords },
         })
         setSubmitState({ status: 'success', id: result.id })
         setStep('success')
@@ -210,6 +223,12 @@ export default function DetailStep() {
           我已确认拍摄时间和地点
         </label>
 
+        {/* Missing-field hint: the submit button stays disabled until every
+            required field is complete; this line says why. */}
+        {!formValid && (
+          <p className="text-xs text-muted">还需完成：{missingFields.join('、')}</p>
+        )}
+
         {submitState.status === 'error' && (
           // Mounted on failure, unmounted while a retry is pending — so the
           // shake replays on every failed submit without reflow tricks.
@@ -224,7 +243,7 @@ export default function DetailStep() {
         <div className="flex items-center gap-3 px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
           <button
             type="submit"
-            disabled={submitting || !confirmed}
+            disabled={submitting || !confirmed || !formValid}
             className="mx-auto rounded-full bg-ink px-16 py-3 text-sm text-white t-press disabled:opacity-40"
           >
             {submitting ? '保存中…' : '保存修改'}
@@ -241,7 +260,7 @@ export default function DetailStep() {
           </button>
           <button
             type="submit"
-            disabled={submitting || !confirmed}
+            disabled={submitting || !confirmed || !formValid}
             className="w-full rounded-full bg-ink py-3.5 text-sm text-white t-press disabled:opacity-40"
           >
             {submitting ? '发布中…' : '发布实况'}
