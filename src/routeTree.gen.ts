@@ -14,6 +14,7 @@ import { Route as MeRouteImport } from './routes/me'
 import { Route as ShareRouteImport } from './routes/share'
 import { Route as PlacePlaceIdRouteImport } from './routes/place.$placeId'
 import { Route as PostPostIdRouteImport } from './routes/post.$postId'
+import { Route as PostPostIdEditRouteImport } from './routes/post.$postId_.edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +41,11 @@ const PostPostIdRoute = PostPostIdRouteImport.update({
   path: '/post/$postId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PostPostIdEditRoute = PostPostIdEditRouteImport.update({
+  id: '/post/$postId_/edit',
+  path: '/post/$postId/edit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/share': typeof ShareRoute
   '/place/$placeId': typeof PlacePlaceIdRoute
   '/post/$postId': typeof PostPostIdRoute
+  '/post/$postId/edit': typeof PostPostIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/share': typeof ShareRoute
   '/place/$placeId': typeof PlacePlaceIdRoute
   '/post/$postId': typeof PostPostIdRoute
+  '/post/$postId/edit': typeof PostPostIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,33 @@ export interface FileRoutesById {
   '/share': typeof ShareRoute
   '/place/$placeId': typeof PlacePlaceIdRoute
   '/post/$postId': typeof PostPostIdRoute
+  '/post/$postId_/edit': typeof PostPostIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/me' | '/share' | '/place/$placeId' | '/post/$postId'
+  fullPaths:
+    | '/'
+    | '/me'
+    | '/share'
+    | '/place/$placeId'
+    | '/post/$postId'
+    | '/post/$postId/edit'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/me' | '/share' | '/place/$placeId' | '/post/$postId'
-  id: '__root__' | '/' | '/me' | '/share' | '/place/$placeId' | '/post/$postId'
+  to:
+    | '/'
+    | '/me'
+    | '/share'
+    | '/place/$placeId'
+    | '/post/$postId'
+    | '/post/$postId/edit'
+  id:
+    | '__root__'
+    | '/'
+    | '/me'
+    | '/share'
+    | '/place/$placeId'
+    | '/post/$postId'
+    | '/post/$postId_/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +105,7 @@ export interface RootRouteChildren {
   ShareRoute: typeof ShareRoute
   PlacePlaceIdRoute: typeof PlacePlaceIdRoute
   PostPostIdRoute: typeof PostPostIdRoute
+  PostPostIdEditRoute: typeof PostPostIdEditRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PostPostIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/post/$postId_/edit': {
+      id: '/post/$postId_/edit'
+      path: '/post/$postId/edit'
+      fullPath: '/post/$postId/edit'
+      preLoaderRoute: typeof PostPostIdEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -125,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShareRoute: ShareRoute,
   PlacePlaceIdRoute: PlacePlaceIdRoute,
   PostPostIdRoute: PostPostIdRoute,
+  PostPostIdEditRoute: PostPostIdEditRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

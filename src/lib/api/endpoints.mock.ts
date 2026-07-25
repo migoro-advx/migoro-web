@@ -18,6 +18,7 @@ import type {
   SightingsQuery,
   Species,
   TimeSource,
+  UpdatePostPayload,
 } from './types'
 
 const MOCK_SPECIES: Species[] = [
@@ -429,6 +430,20 @@ export const mockApi: Api = {
   async createPost(_payload: CreatePostPayload): Promise<CreatePostResult> {
     await delay(700)
     return { id: `mock-${Date.now()}` }
+  },
+
+  async updatePost(postId: string, payload: UpdatePostPayload): Promise<void> {
+    await delay(600)
+    // Only the seeded 我的帖子 are editable (world posts are derived, not
+    // stored). Mutate the entry in place so getPost/listMyPosts reflect the
+    // edit; placeId stays put and coords are intentionally dropped — mock
+    // posts render at their seeded place anchor, and the detail page prefers
+    // `locationName` anyway.
+    const mine = getMyPosts().find(p => p.id === postId)
+    if (!mine) throw new Error(`Post not found: ${postId}`)
+    if (payload.speciesId) mine.speciesId = payload.speciesId
+    if (payload.bloomStage) mine.bloomStage = payload.bloomStage
+    if (payload.location.name) mine.locationName = payload.location.name
   },
 
   async listSpecies(): Promise<Species[]> {

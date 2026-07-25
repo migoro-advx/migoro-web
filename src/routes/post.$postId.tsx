@@ -4,8 +4,8 @@
 // Layout follows the 我的帖子详情 mockup: a top bar (back / title / 编辑), the
 // photo hero, a white species card with a solid stage pill, and a peach
 // 实况记录 card of label/value rows. 编辑 renders only when the signed-in user
-// authored the post, and is an inert placeholder for now.
-import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
+// authored the post, and links to the edit journey.
+import { Link, createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { useUser } from '@clerk/tanstack-react-start'
 import useSWR from 'swr'
 
@@ -50,10 +50,13 @@ function PostDetail() {
             帖子详情
           </h1>
           {isAuthor && (
-            // TODO: 后端用户侧编辑接口就绪后接入（目前 PUT 仅在管理端）。
-            <button type="button" disabled className="text-sm font-semibold text-accent">
+            <Link
+              to="/post/$postId/edit"
+              params={{ postId }}
+              className="text-sm font-semibold text-accent"
+            >
               编辑
-            </button>
+            </Link>
           )}
         </div>
 

@@ -23,6 +23,7 @@ import type {
   Sighting,
   SightingsQuery,
   Species,
+  UpdatePostPayload,
 } from './types'
 
 // --- Backend response shapes (as documented in the OpenAPI spec) ------------
@@ -381,5 +382,29 @@ export const realApi: Api = {
       body: form,
     })
     return { id: vo.id }
+  },
+
+  async updatePost(postId: string, payload: UpdatePostPayload): Promise<void> {
+    // The edit form guarantees complete values, so validate like createPost.
+    if (!payload.location.coords) throw new Error('缺少拍摄位置，无法保存')
+    if (!payload.speciesId) throw new Error('缺少物种，无法保存')
+    if (!payload.bloomStage) throw new Error('缺少观赏状态，无法保存')
+
+    const [mercatorX, mercatorY] = lngLatToMercator(payload.location.coords)
+    const query = new URLSearchParams({
+      speciesId: payload.speciesId,
+      stage: stageToCode(payload.bloomStage),
+      mercatorX: String(mercatorX),
+      mercatorY: String(mercatorY),
+      locationName: payload.location.name,
+    })
+
+    // The endpoint only consumes multipart/form-data, so a body-less PATCH is
+    // rejected with 415. Send an empty FormData — no `file` part means the
+    // backend keeps the existing image (the photo is not editable here).
+    await request<PostVO>(`/api/posts/${postId}?${query.toString()}`, {
+      method: 'PATCH',
+      body: new FormData(),
+    })
   },
 }

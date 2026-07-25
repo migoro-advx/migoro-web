@@ -7,6 +7,12 @@ import type { BloomStage, CaptureMeta, LngLat, Species } from '#/lib/api'
 
 export type ShareStep = 'capture' | 'recognize' | 'location' | 'detail' | 'success'
 
+/**
+ * What the journey is doing: publishing a new post (the full five steps) or
+ * editing an existing one (detail + location only, seeded by EditJourney).
+ */
+export type JourneyMode = { kind: 'create' } | { kind: 'edit'; postId: string }
+
 export interface Capture {
   /** Captured image as a data URL (camera frame or album file). */
   dataUrl: string
@@ -35,6 +41,7 @@ export const EMPTY_FORM: ShareForm = {
 }
 
 export const stepAtom = atom<ShareStep>('capture')
+export const journeyModeAtom = atom<JourneyMode>({ kind: 'create' })
 export const captureAtom = atom<Capture | null>(null)
 export const selectedSpeciesAtom = atom<Species | null>(null)
 export const formAtom = atom<ShareForm>(EMPTY_FORM)
@@ -50,6 +57,7 @@ export const locationEditedAtom = atom(false)
 /** Write-only atom that clears the whole journey back to its initial state. */
 export const resetShareAtom = atom(null, (_get, set) => {
   set(stepAtom, 'capture')
+  set(journeyModeAtom, { kind: 'create' })
   set(captureAtom, null)
   set(selectedSpeciesAtom, null)
   set(formAtom, EMPTY_FORM)

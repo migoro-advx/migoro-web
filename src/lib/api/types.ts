@@ -67,6 +67,20 @@ export interface CreatePostResult {
 }
 
 /**
+ * Fields the edit flow can change on an existing post. The backend PATCH is
+ * partial, but the edit form always knows the full current values, so every
+ * field is sent (photo and capture time are not editable and stay untouched).
+ */
+export interface UpdatePostPayload {
+  speciesId: string | null
+  bloomStage: BloomStage | null
+  location: {
+    name: string
+    coords: LngLat | null
+  }
+}
+
+/**
  * A single field sighting (实况) — one person's observation of a species at a
  * place and time. This is what the map plots and the TimeDial counts.
  */
@@ -180,6 +194,8 @@ export interface SightingsQuery {
 export interface Api {
   recognizeSpecies: (image: string) => Promise<RecognitionCandidate[]>
   createPost: (payload: CreatePostPayload) => Promise<CreatePostResult>
+  /** Partial update of the author's own post (species/stage/location). Auth required. */
+  updatePost: (postId: string, payload: UpdatePostPayload) => Promise<void>
   listSpecies: () => Promise<Species[]>
   listSightings: (params: SightingsQuery) => Promise<Sighting[]>
   /** Aggregated place view for the half-screen panel. Mock-only (no backend endpoint yet). */

@@ -4,16 +4,22 @@
 // confirming time & location, publishes via the API shell — which routes
 // to the success step. Coordinates stay in MapTiler LngLat end to end.
 //
+// Also serves the edit journey (journeyModeAtom 'edit', seeded by EditJourney):
+// same form, but the header gains a back affordance, the copy switches to
+// 编辑帖子/保存修改, and submit PATCHes the post then returns to its detail page.
+//
 // Layout mirrors the "发布实况" design. A single image is allowed per post
 // (single-image model) — there is no add-more affordance.
 import { useState } from 'react'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
-import useSWR from 'swr'
+import { useNavigate, useRouter } from '@tanstack/react-router'
+import useSWR, { mutate } from 'swr'
 
 import { BLOOM_STAGES, api } from '#/lib/api'
 import {
   captureAtom,
   formAtom,
+  journeyModeAtom,
   selectedSpeciesAtom,
   stepAtom,
   submitStateAtom,
@@ -27,38 +33,64 @@ function formatCaptureTime(iso: string): string {
 }
 
 export default function DetailStep() {
+  const mode = useAtomValue(journeyModeAtom)
   const capture = useAtomValue(captureAtom)
   const [selectedSpecies, setSelectedSpecies] = useAtom(selectedSpeciesAtom)
   const [form, setForm] = useAtom(formAtom)
   const [submitState, setSubmitState] = useAtom(submitStateAtom)
   const setStep = useSetAtom(stepAtom)
+  const router = useRouter()
+  const navigate = useNavigate()
   const [confirmed, setConfirmed] = useState(false)
 
   const { data: speciesList = [] } = useSWR('species', () => api.listSpecies(), {
     revalidateOnFocus: false,
   })
 
+  const isEdit = mode.kind === 'edit'
   const submitting = submitState.status === 'pending'
   const locationSummary = [form.locationName, form.areaName].filter(Boolean).join(' · ')
+
+  /**
+   * Leave the edit journey back to the post detail page. The normal entry is
+   * detail -> edit (push), so going back keeps the history stack clean — a
+   * plain push here would make the two pages' back buttons ping-pong forever.
+   * Deep links have no history to pop, so fall back to a replace navigation.
+   */
+  function exitToDetail(postId: string) {
+    if (router.history.canGoBack()) router.history.back()
+    else void navigate({ to: '/post/$postId', params: { postId }, replace: true })
+  }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     if (submitting || !capture || !confirmed) return
     setSubmitState({ status: 'pending' })
     try {
-      const result = await api.createPost({
-        image: capture.dataUrl,
-        capturedAt: capture.meta.capturedAt,
-        speciesId: selectedSpecies?.id ?? null,
-        bloomStage: form.bloomStage,
-        location: { name: form.locationName, coords: form.coords },
-      })
-      setSubmitState({ status: 'success', id: result.id })
-      setStep('success')
+      if (mode.kind === 'edit') {
+        await api.updatePost(mode.postId, {
+          speciesId: selectedSpecies?.id ?? null,
+          bloomStage: form.bloomStage,
+          location: { name: form.locationName, coords: form.coords },
+        })
+        // Refresh the detail page's cache before landing back on it.
+        await mutate(['post', mode.postId])
+        exitToDetail(mode.postId)
+      } else {
+        const result = await api.createPost({
+          image: capture.dataUrl,
+          capturedAt: capture.meta.capturedAt,
+          speciesId: selectedSpecies?.id ?? null,
+          bloomStage: form.bloomStage,
+          location: { name: form.locationName, coords: form.coords },
+        })
+        setSubmitState({ status: 'success', id: result.id })
+        setStep('success')
+      }
     } catch (error) {
       setSubmitState({
         status: 'error',
-        message: error instanceof Error ? error.message : '发送失败',
+        message: error instanceof Error ? error.message : isEdit ? '保存失败' : '发送失败',
       })
     }
   }
@@ -66,11 +98,25 @@ export default function DetailStep() {
   return (
     <form onSubmit={handleSubmit} className="t-slide-in flex h-full flex-col bg-white">
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 pt-[calc(env(safe-area-inset-top)+1rem)] pb-4">
-        <h1 className="text-3xl font-bold text-ink">发布实况</h1>
+        {/* Edit mode arrives from the post detail page, so it needs a way back;
+            create mode's steps own their own close/back affordances. */}
+        <div className="flex items-center gap-2">
+          {isEdit && (
+            <button
+              type="button"
+              aria-label="返回"
+              onClick={() => exitToDetail(mode.postId)}
+              className="-ml-2 flex h-9 w-9 items-center justify-center rounded-full text-2xl text-ink"
+            >
+              <span aria-hidden>‹</span>
+            </button>
+          )}
+          <h1 className="text-3xl font-bold text-ink">{isEdit ? '编辑帖子' : '发布实况'}</h1>
+        </div>
 
         {/* Photo. Single-image model: exactly one capture, no add-more affordance. */}
         <div className="aspect-[16/10] w-full overflow-hidden rounded-3xl bg-celadon">
-          {capture && (
+          {capture?.dataUrl && (
             <img src={capture.dataUrl} alt="所拍照片" className="h-full w-full object-cover" />
           )}
         </div>
@@ -179,14 +225,14 @@ export default function DetailStep() {
         )}
       </div>
 
-      {/* Bottom action: 发布实况. */}
+      {/* Bottom action: 发布实况 / 保存修改. */}
       <div className="flex items-center gap-3 px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
         <button
           type="submit"
           disabled={submitting || !confirmed}
           className="mx-auto rounded-full bg-ink px-16 py-3 text-sm text-white t-press disabled:opacity-40"
         >
-          {submitting ? '发布中…' : '发布实况'}
+          {isEdit ? (submitting ? '保存中…' : '保存修改') : submitting ? '发布中…' : '发布实况'}
         </button>
       </div>
     </form>
