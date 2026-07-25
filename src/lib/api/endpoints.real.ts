@@ -96,7 +96,7 @@ function toSpecies(vo: SpeciesVO): Species {
     // Backend controls the period text; no "花期 " prefix is reintroduced.
     periodLabel: vo.bloomDisplay,
     // accentColor is a presentation-only hint the backend does not provide;
-    // SpeciesQuery falls back to FALLBACK_ACCENT when it is absent.
+    // the UI colors rows with fixed alternating tokens instead (SpeciesQuery).
   }
 }
 

@@ -17,10 +17,6 @@ import type { Species } from '#/lib/api'
 import SeasonFan from './SeasonFan'
 import { queryOpenAtom, selectedSpeciesAtom } from './state'
 
-// Fallback accent color when a species has no `accentColor` (real backend may
-// omit this presentation-only hint).
-const FALLBACK_ACCENT = '#e5e5e5'
-
 function MagnifierIcon({ className }: { className?: string }) {
   return (
     <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -147,13 +143,12 @@ function OtherRow({
       type="button"
       onClick={() => onPick(species)}
       // Cap the stagger index so the total delay stays under ~320ms.
-      style={
-        {
-          backgroundColor: species.accentColor ?? FALLBACK_ACCENT,
-          '--i': Math.min(index, 8),
-        } as React.CSSProperties
-      }
-      className="t-stagger-item flex items-center justify-between rounded-full px-5 py-4 text-left t-press"
+      style={{ '--i': Math.min(index, 8) } as React.CSSProperties}
+      // Rows alternate peach / celadon by visible position, so the rhythm
+      // holds even while the list is filtered by search.
+      className={`t-stagger-item flex items-center justify-between rounded-full px-5 py-4 text-left t-press ${
+        index % 2 === 0 ? 'bg-peach' : 'bg-celadon'
+      }`}
     >
       <span className="text-sm font-medium text-ink">
         {species.commonName}
