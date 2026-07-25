@@ -3,6 +3,7 @@ node_modules
 dist
 dist-ssr
 *.local
+.dev.vars
 worker-configuration.d.ts
 .nitro
 .tanstack

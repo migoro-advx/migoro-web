@@ -7,11 +7,13 @@ import { AuthOverlay } from '#/components/AuthOverlay'
 import BottomNav, { NAV_OFFSET } from '#/components/BottomNav'
 import TimeDial from '#/components/TimeDial'
 import { SproutMark } from '#/brand/illustrations'
+import { chatOpenAtom } from '#/features/chat/state'
 import { placeNameAtom, selectedDayAtom } from '#/features/sightings/state'
 import { useSightings } from '#/features/sightings/useSightings'
 import { queryOpenAtom, selectedSpeciesAtom } from '#/features/species/state'
 
 const MapTilerMap = lazy(() => import('#/components/MapTilerMap'))
+const ChatInvite = lazy(() => import('#/features/chat/ChatInvite'))
 const SpeciesQuery = lazy(() => import('#/features/species/SpeciesQuery'))
 const SightingsMarkers = lazy(() => import('#/features/sightings/SightingsMarkers'))
 const PlacePanel = lazy(() => import('#/features/places/PlacePanel'))
@@ -28,6 +30,20 @@ function MagnifierIcon() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden className="text-muted">
       <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
       <path d="m16 16 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function SparkIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden className="text-accent">
+      <path
+        d="M12 4.5 13.8 9.7 19 11.5l-5.2 1.8L12 18.5l-1.8-5.2L5 11.5l5.2-1.8L12 4.5Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path d="M18.5 3.5v3M20 5h-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   )
 }
@@ -60,6 +76,8 @@ function Home() {
   const setSpecies = useSetAtom(selectedSpeciesAtom)
   const queryOpen = useAtomValue(queryOpenAtom)
   const setQueryOpen = useSetAtom(queryOpenAtom)
+  const chatOpen = useAtomValue(chatOpenAtom)
+  const setChatOpen = useSetAtom(chatOpenAtom)
   const selectedDay = useAtomValue(selectedDayAtom)
   const setSelectedDay = useSetAtom(selectedDayAtom)
   const placeName = useAtomValue(placeNameAtom)
@@ -103,32 +121,43 @@ function Home() {
         </Suspense>
       </ClientOnly>
 
-      {/* Top search field + 定位胶囊. Mirrors the design's top bar enough to
-          drive the species-query overlay and reflect the current filter. */}
+      {/* Top search field + 问问 AI + 定位胶囊. Mirrors the design's top bar
+          enough to drive the species-query overlay and reflect the filter. */}
       <div className="fixed inset-x-0 top-0 z-40 px-5 pt-[calc(env(safe-area-inset-top)+0.75rem)]">
         <div className="mx-auto w-full max-w-md">
-          <div className="flex items-center gap-2 rounded-full bg-white px-4 py-3 shadow-lg ring-1 ring-black/5">
-            <MagnifierIcon />
-            <button
-              type="button"
-              onClick={() => setQueryOpen(true)}
-              className="flex-1 text-left text-sm text-ink"
-            >
-              {selectedSpecies ? (
-                selectedSpecies.commonName
-              ) : (
-                <span className="text-muted">查哪一种花？</span>
-              )}
-            </button>
-            {selectedSpecies && (
+          <div className="flex items-center gap-2">
+            <div className="flex flex-1 items-center gap-2 rounded-full bg-white px-4 py-3 shadow-lg ring-1 ring-black/5">
+              <MagnifierIcon />
               <button
                 type="button"
-                onClick={() => setSpecies(null)}
-                className="t-fade-in text-sm font-medium text-accent"
+                onClick={() => setQueryOpen(true)}
+                className="flex-1 text-left text-sm text-ink"
               >
-                清除
+                {selectedSpecies ? (
+                  selectedSpecies.commonName
+                ) : (
+                  <span className="text-muted">查哪一种花？</span>
+                )}
               </button>
-            )}
+              {selectedSpecies && (
+                <button
+                  type="button"
+                  onClick={() => setSpecies(null)}
+                  className="t-fade-in text-sm font-medium text-accent"
+                >
+                  清除
+                </button>
+              )}
+            </div>
+            {/* Chat-invite entry — opens the Photon iMessage invite modal. */}
+            <button
+              type="button"
+              onClick={() => setChatOpen(true)}
+              className="flex shrink-0 items-center gap-1.5 rounded-full bg-white px-4 py-3 text-sm font-medium text-ink shadow-lg ring-1 ring-black/5 t-press"
+            >
+              <SparkIcon />
+              问问 AI
+            </button>
           </div>
           {placeName && (
             <div className="t-pop-in mt-2 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs text-ink shadow-md ring-1 ring-black/5">
@@ -190,6 +219,11 @@ function Home() {
       {queryOpen && (
         <Suspense fallback={null}>
           <SpeciesQuery />
+        </Suspense>
+      )}
+      {chatOpen && (
+        <Suspense fallback={null}>
+          <ChatInvite />
         </Suspense>
       )}
       <ClientOnly fallback={null}>
